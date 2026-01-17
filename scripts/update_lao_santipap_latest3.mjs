@@ -154,7 +154,7 @@ async function main() {
 
   await fs.mkdir("public", { recursive: true });
   await fs.writeFile(
-    "public/lao_santipap_latest3.json",
+    "lao_santipap_latest3.json",
     JSON.stringify(json, null, 2),
     "utf8"
   );
