@@ -1,7 +1,15 @@
 import fs from "node:fs/promises";
 
-const SOURCE_URL = "https://r.jina.ai/https://www.raakaadee.com/%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AB%E0%B8%A7%E0%B8%A2-%E0%B8%AB%E0%B8%B8%E0%B9%89%E0%B8%99/%E0%B8%AB%E0%B8%A7%E0%B8%A2%E0%B8%A5%E0%B8%B2%E0%B8%A7%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%95%E0%B8%B4%E0%B8%A0%E0%B8%B2%E0%B8%9E/";
+// ===== CONFIG =====
+const TARGET_URL =
+  "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสันติภาพ/";
 
+const SOURCES = [
+  "http://textise.net/showtext.aspx?strURL=" + TARGET_URL,
+  "http://textise.com/showtext.aspx?strURL=" + TARGET_URL
+];
+
+// ===== UTILS =====
 function nowISO() {
   const d = new Date();
   const tzOffsetMin = -d.getTimezoneOffset();
@@ -11,23 +19,41 @@ function nowISO() {
   return d.toISOString().replace("Z", `${sign}${hh}:${mm}`);
 }
 
-function stripHtmlToText(html) {
-  html = html.replace(/<script[\s\S]*?<\/script>/gi, " ");
-  html = html.replace(/<style[\s\S]*?<\/style>/gi, " ");
-  html = html.replace(/<\/?[^>]+>/g, " ");
-  html = html.replace(/\s+/g, " ").trim();
-  return html.slice(0, 12000);
-}
-
 async function fetchHtml() {
-  const res = await fetch(SOURCE_URL, {
-    headers: { "user-agent": "Mozilla/5.0 (ResultsBot/1.0)" }
-  });
-  if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
-  return await res.text();
+  for (const url of SOURCES) {
+    try {
+      const res = await fetch(url, {
+        headers: {
+          "user-agent": "Mozilla/5.0",
+          accept: "text/html"
+        }
+      });
+      if (res.ok) {
+        console.log("Fetched from:", url);
+        return await res.text();
+      }
+    } catch (e) {
+      console.warn("Fetch failed:", url);
+    }
+  }
+  throw new Error("All sources failed");
 }
 
-async function callOpenAI({ apiKey, text }) {
+function cleanText(html) {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<\/?[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 12000);
+}
+
+// ===== OPENAI =====
+async function callOpenAI(text) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) throw new Error("Missing OPENAI_API_KEY");
+
   const schema = {
     name: "lao_santipap_latest_3",
     schema: {
@@ -35,7 +61,7 @@ async function callOpenAI({ apiKey, text }) {
       additionalProperties: false,
       required: ["lottery", "source_url", "fetched_at", "draws"],
       properties: {
-        lottery: { type: "string", enum: ["lao_santipap"] },
+        lottery: { type: "string" },
         source_url: { type: "string" },
         fetched_at: { type: "string" },
         draws: {
@@ -45,7 +71,13 @@ async function callOpenAI({ apiKey, text }) {
           items: {
             type: "object",
             additionalProperties: false,
-            required: ["draw_date", "full_number", "top3", "top2", "bottom2"],
+            required: [
+              "draw_date",
+              "full_number",
+              "top3",
+              "top2",
+              "bottom2"
+            ],
             properties: {
               draw_date: { type: "string" },
               full_number: { type: "string" },
@@ -60,26 +92,26 @@ async function callOpenAI({ apiKey, text }) {
     strict: true
   };
 
-const body = {
-  model: "gpt-5",
-  input: [
-    {
-      role: "system",
-      content:
-        "Extract Lao Santipap lottery results from the provided text. Return ONLY valid JSON following the given schema. Choose the latest 3 draws found."
-    },
-    {
-      role: "user",
-      content: `SOURCE_URL: ${SOURCE_URL ?? "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสันติภาพ/"}\nFETCHED_AT: ${nowISO()}\nTEXT:\n${text}`
+  const body = {
+    model: "gpt-5",
+    input: [
+      {
+        role: "system",
+        content:
+          "Extract Lao Santipap lottery results. Return ONLY valid JSON following the schema. Use latest 3 draws."
+      },
+      {
+        role: "user",
+        content: `SOURCE_URL: ${TARGET_URL}\nFETCHED_AT: ${nowISO()}\nTEXT:\n${text}`
+      }
+    ],
+    response_format: {
+      type: "json_schema",
+      json_schema: schema
     }
-  ],
-  response_format: {
-    type: "json_schema",
-    json_schema: schema
-  }
-};
+  };
 
-  const resp = await fetch("https://api.openai.com/v1/responses", {
+  const res = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: {
       authorization: `Bearer ${apiKey}`,
@@ -88,31 +120,31 @@ const body = {
     body: JSON.stringify(body)
   });
 
-  if (!resp.ok) {
-    const err = await resp.text().catch(() => "");
-    throw new Error(`OpenAI error ${resp.status}: ${err.slice(0, 300)}`);
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error("OpenAI error: " + err);
   }
-const data = await resp.json();
 
-const outputText =
-  data.output_text ??
-  data.output?.flatMap?.(o => o.content || [])?.find?.(c => c.type === "output_text")?.text ??
-  data.response?.output_text; // เผื่อรูปแบบอื่น
+  const data = await res.json();
+  const outputText =
+    data.output_text ??
+    data.output?.flatMap(o => o.content || []).find(c => c.type === "output_text")
+      ?.text;
 
-if (!outputText) throw new Error("No output_text from OpenAI response");
-return JSON.parse(outputText);
+  if (!outputText) throw new Error("No output_text from OpenAI");
 
+  return JSON.parse(outputText);
+}
+
+// ===== MAIN =====
 async function main() {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) throw new Error("Missing OPENAI_API_KEY");
-
   const html = await fetchHtml();
-  const text = stripHtmlToText(html);
-  const json = await callOpenAI({ apiKey, text });
+  const text = cleanText(html);
+  const json = await callOpenAI(text);
 
-  json.fetched_at = json.fetched_at || nowISO();
-  json.source_url = json.source_url || SOURCE_URL;
   json.lottery = "lao_santipap";
+  json.source_url = TARGET_URL;
+  json.fetched_at = json.fetched_at || nowISO();
 
   await fs.mkdir("public", { recursive: true });
   await fs.writeFile(
@@ -121,10 +153,10 @@ async function main() {
     "utf8"
   );
 
-  console.log("Updated public/lao_santipap_latest3.json");
+  console.log("✅ Updated public/lao_santipap_latest3.json");
 }
 
-main().catch((e) => {
-  console.error(e);
+main().catch(err => {
+  console.error(err);
   process.exit(1);
 });
