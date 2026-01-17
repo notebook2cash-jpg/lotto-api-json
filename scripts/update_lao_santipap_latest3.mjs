@@ -60,24 +60,24 @@ async function callOpenAI({ apiKey, text }) {
     strict: true
   };
 
-  const body = {
-    model: "gpt-5",
-    reasoning: { effort: "low" },
-    input: [
-      {
-        role: "system",
-        content:
-          "Extract Lao Santipap lottery results from the provided text. Return ONLY valid JSON following the given schema. Choose the latest 3 draws found."
-      },
-      {
-        role: "user",
-        content: `SOURCE_URL: ${SOURCE_URL}\nFETCHED_AT: ${nowISO()}\nTEXT:\n${text}`
-      }
-    ],
-    text: {
-      format: { type: "json_schema", json_schema: schema }
+const body = {
+  model: "gpt-5",
+  input: [
+    {
+      role: "system",
+      content:
+        "Extract Lao Santipap lottery results from the provided text. Return ONLY valid JSON following the given schema. Choose the latest 3 draws found."
+    },
+    {
+      role: "user",
+      content: `SOURCE_URL: ${SOURCE_URL ?? "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสันติภาพ/"}\nFETCHED_AT: ${nowISO()}\nTEXT:\n${text}`
     }
-  };
+  ],
+  response_format: {
+    type: "json_schema",
+    json_schema: schema
+  }
+};
 
   const resp = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
@@ -92,16 +92,15 @@ async function callOpenAI({ apiKey, text }) {
     const err = await resp.text().catch(() => "");
     throw new Error(`OpenAI error ${resp.status}: ${err.slice(0, 300)}`);
   }
+const data = await resp.json();
 
-  const data = await resp.json();
-  const outputText =
-    data.output_text ??
-    data.output?.[0]?.content?.find?.((c) => c.type === "output_text")?.text;
+const outputText =
+  data.output_text ??
+  data.output?.flatMap?.(o => o.content || [])?.find?.(c => c.type === "output_text")?.text ??
+  data.response?.output_text; // เผื่อรูปแบบอื่น
 
-  if (!outputText) throw new Error("No output_text from OpenAI");
-
-  return JSON.parse(outputText);
-}
+if (!outputText) throw new Error("No output_text from OpenAI response");
+return JSON.parse(outputText);
 
 async function main() {
   const apiKey = process.env.OPENAI_API_KEY;
