@@ -58,8 +58,6 @@ async function callOpenAI(text) {
         fetched_at: { type: "string" },
         draws: {
           type: "array",
-          minItems: 1,
-          maxItems: 3,
           items: {
             type: "object",
             additionalProperties: false,
@@ -85,8 +83,8 @@ async function callOpenAI(text) {
   };
 
   const body = {
-    model: "gpt-5",
-    input: [
+    model: "gpt-4o",
+    messages: [
       {
         role: "system",
         content:
@@ -103,11 +101,11 @@ async function callOpenAI(text) {
     },
   };
 
-  const res = await fetch("https://api.openai.com/v1/responses", {
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
-      authorization: `Bearer ${apiKey}`,
-      "content-type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
   });
@@ -118,13 +116,9 @@ async function callOpenAI(text) {
   }
 
   const data = await res.json();
-  const outputText =
-    data.output_text ??
-    data.output?.flatMap((o) => o.content || [])?.find(
-      (c) => c.type === "output_text"
-    )?.text;
+  const outputText = data.choices?.[0]?.message?.content;
 
-  if (!outputText) throw new Error("No output_text");
+  if (!outputText) throw new Error("No output from OpenAI");
 
   return JSON.parse(outputText);
 }
@@ -145,6 +139,8 @@ async function main() {
     JSON.stringify(json, null, 2),
     "utf8"
   );
+  
+  console.log("✅ Done:", json);
 }
 
 main().catch((err) => {
