@@ -5,9 +5,8 @@ const TARGET_URL =
   "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสันติภาพ/";
 
 const SOURCES = [
-  "http://textise.net/showtext.aspx?strURL=" + encodeURIComponent(TARGET_URL),
-  "http://textise.com/showtext.aspx?strURL=" + encodeURIComponent(TARGET_URL),
-  TARGET_URL // fallback to direct fetch
+  "http://textise.net/showtext.aspx?strURL=" + TARGET_URL,
+  "http://textise.com/showtext.aspx?strURL=" + TARGET_URL
 ];
 
 // ===== UTILS =====
@@ -25,19 +24,12 @@ async function fetchHtml() {
     try {
       const res = await fetch(url, {
         headers: {
-          "user-agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-          "accept-language": "th-TH,th;q=0.9,en;q=0.8"
+          "user-agent": "Mozilla/5.0",
+          accept: "text/html"
         }
       });
-      if (res.ok) {
-        console.log("Fetched from:", url);
-        return await res.text();
-      }
-    } catch (e) {
-      console.warn("Fetch failed:", url, e.message);
-    }
+      if (res.ok) return await res.text();
+    } catch (_) {}
   }
   throw new Error("All sources failed");
 }
@@ -47,16 +39,11 @@ function cleanText(html) {
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<\/?[^>]+>/g, " ")
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 12000);
 }
 
-// ===== OPENAI =====
 async function callOpenAI(text) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("Missing OPENAI_API_KEY");
@@ -73,6 +60,8 @@ async function callOpenAI(text) {
         fetched_at: { type: "string" },
         draws: {
           type: "array",
+          minItems: 1,
+          maxItems: 3,
           items: {
             type: "object",
             additionalProperties: false,
@@ -98,12 +87,12 @@ async function callOpenAI(text) {
   };
 
   const body = {
-    model: "gpt-4o",
-    messages: [
+    model: "gpt-5",
+    input: [
       {
         role: "system",
         content:
-          "Extract Lao Santipap lottery results. Return ONLY valid JSON following the schema. Use latest 3 draws. draw_date should be in YYYY-MM-DD format."
+          "Extract Lao Santipap lottery results. Return ONLY valid JSON following the schema. Use latest 3 draws."
       },
       {
         role: "user",
@@ -116,24 +105,27 @@ async function callOpenAI(text) {
     }
   };
 
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+  const res = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json"
+      authorization: `Bearer ${apiKey}`,
+      "content-type": "application/json"
     },
     body: JSON.stringify(body)
   });
 
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error("OpenAI error: " + err);
+    const err = await res.text().catch(() => "");
+    throw new Error(`OpenAI error ${res.status}: ${err}`);
   }
 
   const data = await res.json();
-  const outputText = data.choices?.[0]?.message?.content;
+  const outputText =
+    data.output_text ??
+    data.output?.flatMap((o) => o.content || [])?.find((c) => c.type === "output_text")
+      ?.text;
 
-  if (!outputText) throw new Error("No content from OpenAI");
+  if (!outputText) throw new Error("No output_text from OpenAI");
 
   return JSON.parse(outputText);
 }
@@ -142,28 +134,21 @@ async function callOpenAI(text) {
 async function main() {
   const html = await fetchHtml();
   const text = cleanText(html);
-  
-  console.log("Text length:", text.length);
-  console.log("Text preview:", text.slice(0, 500));
-  
-  const json = await callOpenAI(text);
 
+  const json = await callOpenAI(text);
   json.lottery = "lao_santipap";
   json.source_url = TARGET_URL;
   json.fetched_at = json.fetched_at || nowISO();
 
-  await fs.mkdir("public", { recursive: true });
+  // ✅ WRITE TO ROOT
   await fs.writeFile(
     "lao_santipap_latest3.json",
     JSON.stringify(json, null, 2),
     "utf8"
   );
-
-  console.log("✅ Updated public/lao_santipap_latest3.json");
-  console.log(JSON.stringify(json, null, 2));
 }
 
-main().catch(err => {
-  console.error("❌ Error:", err.message);
+main().catch((err) => {
+  console.error(err);
   process.exit(1);
 });
