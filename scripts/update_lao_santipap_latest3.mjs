@@ -4,11 +4,6 @@ import fs from "node:fs/promises";
 const TARGET_URL =
   "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสันติภาพ/";
 
-const SOURCES = [
-  "http://textise.net/showtext.aspx?strURL=" + TARGET_URL,
-  "http://textise.com/showtext.aspx?strURL=" + TARGET_URL
-];
-
 // ===== UTILS =====
 function nowISO() {
   const d = new Date();
@@ -19,19 +14,22 @@ function nowISO() {
   return d.toISOString().replace("Z", `${sign}${hh}:${mm}`);
 }
 
+// ✅ FETCH ตรง ไม่ผ่าน textise
 async function fetchHtml() {
-  for (const url of SOURCES) {
-    try {
-      const res = await fetch(url, {
-        headers: {
-          "user-agent": "Mozilla/5.0",
-          accept: "text/html"
-        }
-      });
-      if (res.ok) return await res.text();
-    } catch (_) {}
+  const res = await fetch(TARGET_URL, {
+    headers: {
+      "user-agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+      accept:
+        "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "accept-language": "th-TH,th;q=0.9,en;q=0.8",
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Fetch failed: ${res.status}`);
   }
-  throw new Error("All sources failed");
+  return await res.text();
 }
 
 function cleanText(html) {
@@ -70,20 +68,20 @@ async function callOpenAI(text) {
               "full_number",
               "top3",
               "top2",
-              "bottom2"
+              "bottom2",
             ],
             properties: {
               draw_date: { type: "string" },
               full_number: { type: "string" },
               top3: { type: "string" },
               top2: { type: "string" },
-              bottom2: { type: "string" }
-            }
-          }
-        }
-      }
+              bottom2: { type: "string" },
+            },
+          },
+        },
+      },
     },
-    strict: true
+    strict: true,
   };
 
   const body = {
@@ -92,40 +90,41 @@ async function callOpenAI(text) {
       {
         role: "system",
         content:
-          "Extract Lao Santipap lottery results. Return ONLY valid JSON following the schema. Use latest 3 draws."
+          "Extract Lao Santipap lottery results. Return ONLY valid JSON. Latest 3 draws.",
       },
       {
         role: "user",
-        content: `SOURCE_URL: ${TARGET_URL}\nFETCHED_AT: ${nowISO()}\nTEXT:\n${text}`
-      }
+        content: `SOURCE_URL: ${TARGET_URL}\nFETCHED_AT: ${nowISO()}\nTEXT:\n${text}`,
+      },
     ],
     response_format: {
       type: "json_schema",
-      json_schema: schema
-    }
+      json_schema: schema,
+    },
   };
 
   const res = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: {
       authorization: `Bearer ${apiKey}`,
-      "content-type": "application/json"
+      "content-type": "application/json",
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
-    const err = await res.text().catch(() => "");
-    throw new Error(`OpenAI error ${res.status}: ${err}`);
+    const err = await res.text();
+    throw new Error(`OpenAI ${res.status}: ${err}`);
   }
 
   const data = await res.json();
   const outputText =
     data.output_text ??
-    data.output?.flatMap((o) => o.content || [])?.find((c) => c.type === "output_text")
-      ?.text;
+    data.output?.flatMap((o) => o.content || [])?.find(
+      (c) => c.type === "output_text"
+    )?.text;
 
-  if (!outputText) throw new Error("No output_text from OpenAI");
+  if (!outputText) throw new Error("No output_text");
 
   return JSON.parse(outputText);
 }
@@ -140,7 +139,7 @@ async function main() {
   json.source_url = TARGET_URL;
   json.fetched_at = json.fetched_at || nowISO();
 
-  // ✅ WRITE TO ROOT
+  // ✅ เขียนที่ ROOT เท่านั้น
   await fs.writeFile(
     "lao_santipap_latest3.json",
     JSON.stringify(json, null, 2),
