@@ -1,34 +1,61 @@
 import fs from "node:fs/promises";
 
-// ===== CONFIG =====
-const TARGET_URL =
-  "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสันติภาพ/";
+/* ================= CONFIG ================= */
 
-// ===== UTILS =====
+const LOTTERIES = [
+  {
+    key: "lao_pattana",
+    name: "หวยลาวพัฒนา",
+    url: "https://www.sanook.com/news/laolotto/",
+  },
+  {
+    key: "lao_samakkee",
+    name: "ลาวสามัคคี",
+    url: "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสามัคคี/",
+  },
+  {
+    key: "lao_vip",
+    name: "ลาว VIP",
+    url: "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาว-VIP/",
+  },
+  {
+    key: "lao_star",
+    name: "ลาวสตาร์",
+    url: "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสตาร์/",
+  },
+  {
+    key: "lao_extra",
+    name: "ลาว Extra",
+    url: "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาว-Extra/",
+  },
+  {
+    key: "hanoi",
+    name: "ฮานอย",
+    url: "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยฮานอยปกติ/",
+  },
+];
+
+/* ================= UTILS ================= */
+
 function nowISO() {
   const d = new Date();
-  const tzOffsetMin = -d.getTimezoneOffset();
-  const sign = tzOffsetMin >= 0 ? "+" : "-";
-  const hh = String(Math.floor(Math.abs(tzOffsetMin) / 60)).padStart(2, "0");
-  const mm = String(Math.abs(tzOffsetMin) % 60).padStart(2, "0");
+  const tz = -d.getTimezoneOffset();
+  const sign = tz >= 0 ? "+" : "-";
+  const hh = String(Math.floor(Math.abs(tz) / 60)).padStart(2, "0");
+  const mm = String(Math.abs(tz) % 60).padStart(2, "0");
   return d.toISOString().replace("Z", `${sign}${hh}:${mm}`);
 }
 
-// ✅ FETCH ตรง ไม่ผ่าน textise
-async function fetchHtml() {
-  const res = await fetch(TARGET_URL, {
+async function fetchHtml(url) {
+  const res = await fetch(url, {
     headers: {
       "user-agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
-      accept:
-        "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
+      accept: "text/html",
       "accept-language": "th-TH,th;q=0.9,en;q=0.8",
     },
   });
-
-  if (!res.ok) {
-    throw new Error(`Fetch failed: ${res.status}`);
-  }
+  if (!res.ok) throw new Error(`Fetch failed ${res.status} ${url}`);
   return await res.text();
 }
 
@@ -42,45 +69,9 @@ function cleanText(html) {
     .slice(0, 12000);
 }
 
-async function callOpenAI(text) {
+async function callOpenAI(lottery, text) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("Missing OPENAI_API_KEY");
-
-  const schema = {
-    name: "lao_santipap_latest_3",
-    schema: {
-      type: "object",
-      additionalProperties: false,
-      required: ["lottery", "source_url", "fetched_at", "draws"],
-      properties: {
-        lottery: { type: "string" },
-        source_url: { type: "string" },
-        fetched_at: { type: "string" },
-        draws: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: false,
-            required: [
-              "draw_date",
-              "full_number",
-              "top3",
-              "top2",
-              "bottom2",
-            ],
-            properties: {
-              draw_date: { type: "string" },
-              full_number: { type: "string" },
-              top3: { type: "string" },
-              top2: { type: "string" },
-              bottom2: { type: "string" },
-            },
-          },
-        },
-      },
-    },
-    strict: true,
-  };
 
   const body = {
     model: "gpt-4o",
@@ -88,16 +79,58 @@ async function callOpenAI(text) {
       {
         role: "system",
         content:
-          "Extract Lao Santipap lottery results. Return ONLY valid JSON. Latest 3 draws.",
+          "Extract lottery results. Return ONLY valid JSON. Latest 3 draws only.",
       },
       {
         role: "user",
-        content: `SOURCE_URL: ${TARGET_URL}\nFETCHED_AT: ${nowISO()}\nTEXT:\n${text}`,
+        content: `
+LOTTERY_KEY: ${lottery.key}
+LOTTERY_NAME: ${lottery.name}
+SOURCE_URL: ${lottery.url}
+FETCHED_AT: ${nowISO()}
+
+TEXT:
+${text}
+        `,
       },
     ],
     response_format: {
       type: "json_schema",
-      json_schema: schema,
+      json_schema: {
+        name: "lotto_latest_3",
+        schema: {
+          type: "object",
+          additionalProperties: false,
+          required: ["lottery", "source_url", "fetched_at", "draws"],
+          properties: {
+            lottery: { type: "string" },
+            source_url: { type: "string" },
+            fetched_at: { type: "string" },
+            draws: {
+              type: "array",
+              items: {
+                type: "object",
+                additionalProperties: false,
+                required: [
+                  "draw_date",
+                  "full_number",
+                  "top3",
+                  "top2",
+                  "bottom2",
+                ],
+                properties: {
+                  draw_date: { type: "string" },
+                  full_number: { type: "string" },
+                  top3: { type: "string" },
+                  top2: { type: "string" },
+                  bottom2: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        strict: true,
+      },
     },
   };
 
@@ -111,36 +144,52 @@ async function callOpenAI(text) {
   });
 
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`OpenAI ${res.status}: ${err}`);
+    const t = await res.text();
+    throw new Error(`OpenAI ${res.status}: ${t}`);
   }
 
   const data = await res.json();
-  const outputText = data.choices?.[0]?.message?.content;
+  const textOut = data.choices?.[0]?.message?.content;
 
-  if (!outputText) throw new Error("No output from OpenAI");
-
-  return JSON.parse(outputText);
+  if (!textOut) throw new Error("No output from OpenAI");
+  return JSON.parse(textOut);
 }
 
-// ===== MAIN =====
+/* ================= MAIN ================= */
+
 async function main() {
-  const html = await fetchHtml();
-  const text = cleanText(html);
+  const all = {
+    updated_at: nowISO(),
+    items: [],
+  };
 
-  const json = await callOpenAI(text);
-  json.lottery = "lao_santipap";
-  json.source_url = TARGET_URL;
-  json.fetched_at = json.fetched_at || nowISO();
+  for (const lot of LOTTERIES) {
+    console.log(`Processing: ${lot.name}...`);
+    
+    try {
+      const html = await fetchHtml(lot.url);
+      const text = cleanText(html);
 
-  // ✅ เขียนที่ ROOT เท่านั้น
-  await fs.writeFile(
-    "lao_santipap_latest3.json",
-    JSON.stringify(json, null, 2),
-    "utf8"
-  );
-  
-  console.log("✅ Done:", json);
+      const json = await callOpenAI(lot, text);
+
+      // normalize ให้เหมือนกันหมด
+      all.items.push({
+        key: lot.key,
+        name: lot.name,
+        source_url: lot.url,
+        fetched_at: json.fetched_at || nowISO(),
+        draws: json.draws,
+      });
+      
+      console.log(`✅ ${lot.name} done`);
+    } catch (err) {
+      console.error(`❌ ${lot.name} failed:`, err.message);
+    }
+  }
+
+  // ✅ ไฟล์เดียว
+  await fs.writeFile("all_latest3.json", JSON.stringify(all, null, 2), "utf8");
+  console.log(`\n✅ Saved all_latest3.json with ${all.items.length} lotteries`);
 }
 
 main().catch((err) => {
