@@ -5,8 +5,9 @@ const TARGET_URL =
   "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสันติภาพ/";
 
 const SOURCES = [
-  "http://textise.net/showtext.aspx?strURL=" + TARGET_URL,
-  "http://textise.com/showtext.aspx?strURL=" + TARGET_URL
+  "http://textise.net/showtext.aspx?strURL=" + encodeURIComponent(TARGET_URL),
+  "http://textise.com/showtext.aspx?strURL=" + encodeURIComponent(TARGET_URL),
+  TARGET_URL // fallback to direct fetch
 ];
 
 // ===== UTILS =====
@@ -24,8 +25,10 @@ async function fetchHtml() {
     try {
       const res = await fetch(url, {
         headers: {
-          "user-agent": "Mozilla/5.0",
-          accept: "text/html"
+          "user-agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "accept-language": "th-TH,th;q=0.9,en;q=0.8"
         }
       });
       if (res.ok) {
@@ -33,7 +36,7 @@ async function fetchHtml() {
         return await res.text();
       }
     } catch (e) {
-      console.warn("Fetch failed:", url);
+      console.warn("Fetch failed:", url, e.message);
     }
   }
   throw new Error("All sources failed");
@@ -44,6 +47,10 @@ function cleanText(html) {
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<\/?[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 12000);
@@ -66,8 +73,6 @@ async function callOpenAI(text) {
         fetched_at: { type: "string" },
         draws: {
           type: "array",
-          minItems: 1,
-          maxItems: 3,
           items: {
             type: "object",
             additionalProperties: false,
@@ -93,12 +98,12 @@ async function callOpenAI(text) {
   };
 
   const body = {
-    model: "gpt-5",
-    input: [
+    model: "gpt-4o",
+    messages: [
       {
         role: "system",
         content:
-          "Extract Lao Santipap lottery results. Return ONLY valid JSON following the schema. Use latest 3 draws."
+          "Extract Lao Santipap lottery results. Return ONLY valid JSON following the schema. Use latest 3 draws. draw_date should be in YYYY-MM-DD format."
       },
       {
         role: "user",
@@ -111,11 +116,11 @@ async function callOpenAI(text) {
     }
   };
 
-  const res = await fetch("https://api.openai.com/v1/responses", {
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
-      authorization: `Bearer ${apiKey}`,
-      "content-type": "application/json"
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json"
     },
     body: JSON.stringify(body)
   });
@@ -126,12 +131,9 @@ async function callOpenAI(text) {
   }
 
   const data = await res.json();
-  const outputText =
-    data.output_text ??
-    data.output?.flatMap(o => o.content || []).find(c => c.type === "output_text")
-      ?.text;
+  const outputText = data.choices?.[0]?.message?.content;
 
-  if (!outputText) throw new Error("No output_text from OpenAI");
+  if (!outputText) throw new Error("No content from OpenAI");
 
   return JSON.parse(outputText);
 }
@@ -140,6 +142,10 @@ async function callOpenAI(text) {
 async function main() {
   const html = await fetchHtml();
   const text = cleanText(html);
+  
+  console.log("Text length:", text.length);
+  console.log("Text preview:", text.slice(0, 500));
+  
   const json = await callOpenAI(text);
 
   json.lottery = "lao_santipap";
@@ -154,9 +160,10 @@ async function main() {
   );
 
   console.log("✅ Updated public/lao_santipap_latest3.json");
+  console.log(JSON.stringify(json, null, 2));
 }
 
 main().catch(err => {
-  console.error(err);
+  console.error("❌ Error:", err.message);
   process.exit(1);
 });
