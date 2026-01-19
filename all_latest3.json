@@ -1,28 +1,28 @@
 {
-  "updated_at": "2026-01-19T18:58:36.502+00:00",
+  "updated_at": "2026-01-19T19:32:53.409+00:00",
   "items": [
     {
       "key": "lao_pattana",
       "name": "หวยลาวพัฒนา",
       "source_url": "https://www.sanook.com/news/laolotto/",
-      "fetched_at": "2026-01-19T18:58:39.482+00:00",
+      "fetched_at": "2026-01-19T19:32:56.380+00:00",
       "draws": [
         {
-          "draw_date": "2026-01-19",
+          "draw_date": "2569-01-19",
           "full_number": "7789",
           "top3": "789",
           "top2": "89",
           "bottom2": "89"
         },
         {
-          "draw_date": "2026-01-16",
+          "draw_date": "2569-01-16",
           "full_number": "4182",
           "top3": "182",
           "top2": "82",
           "bottom2": "82"
         },
         {
-          "draw_date": "2026-01-14",
+          "draw_date": "2569-01-14",
           "full_number": "8060",
           "top3": "060",
           "top2": "60",
