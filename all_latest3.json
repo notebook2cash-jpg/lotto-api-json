@@ -1,32 +1,32 @@
 {
-  "updated_at": "2026-01-19T04:18:13.551+00:00",
+  "updated_at": "2026-01-19T05:51:43.620+00:00",
   "items": [
     {
       "key": "lao_pattana",
       "name": "หวยลาวพัฒนา",
       "source_url": "https://www.sanook.com/news/laolotto/",
-      "fetched_at": "2026-01-19T04:18:16.291+00:00",
+      "fetched_at": "2026-01-19T05:51:46.010+00:00",
       "draws": [
         {
           "draw_date": "2026-01-16",
           "full_number": "4182",
           "top3": "182",
           "top2": "82",
-          "bottom2": "NA"
+          "bottom2": "82"
         },
         {
           "draw_date": "2026-01-14",
           "full_number": "8060",
           "top3": "060",
           "top2": "60",
-          "bottom2": "NA"
+          "bottom2": "60"
         },
         {
           "draw_date": "2026-01-12",
           "full_number": "6753",
           "top3": "753",
           "top2": "53",
-          "bottom2": "NA"
+          "bottom2": "53"
         }
       ]
     },
@@ -34,7 +34,7 @@
       "key": "lao_samakkee",
       "name": "ลาวสามัคคี",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสามัคคี/",
-      "fetched_at": "2026-01-19T04:18:19.234+00:00",
+      "fetched_at": "2026-01-19T05:51:49.789+00:00",
       "draws": [
         {
           "draw_date": "2026-01-18",
@@ -63,7 +63,7 @@
       "key": "lao_vip",
       "name": "ลาว VIP",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาว-VIP/",
-      "fetched_at": "2026-01-19T04:18:22.745+00:00",
+      "fetched_at": "2026-01-19T05:51:53.644+00:00",
       "draws": [
         {
           "draw_date": "2026-01-18",
@@ -92,7 +92,7 @@
       "key": "lao_star",
       "name": "ลาวสตาร์",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสตาร์/",
-      "fetched_at": "2026-01-19T04:18:26.544+00:00",
+      "fetched_at": "2026-01-19T05:51:57.258+00:00",
       "draws": [
         {
           "draw_date": "2026-01-18",
@@ -121,24 +121,24 @@
       "key": "lao_extra",
       "name": "ลาว Extra",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาว-Extra/",
-      "fetched_at": "2026-01-19T04:18:30.182+00:00",
+      "fetched_at": "2026-01-19T05:52:00.686+00:00",
       "draws": [
         {
-          "draw_date": "2026-01-19",
+          "draw_date": "19-01-2569",
           "full_number": "05485",
           "top3": "485",
           "top2": "85",
           "bottom2": "05"
         },
         {
-          "draw_date": "2026-01-18",
+          "draw_date": "18-01-2569",
           "full_number": "60705",
           "top3": "705",
           "top2": "05",
           "bottom2": "60"
         },
         {
-          "draw_date": "2026-01-17",
+          "draw_date": "17-01-2569",
           "full_number": "02697",
           "top3": "697",
           "top2": "97",
@@ -150,7 +150,7 @@
       "key": "hanoi",
       "name": "ฮานอย",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยฮานอยปกติ/",
-      "fetched_at": "2026-01-19T04:18:33.592+00:00",
+      "fetched_at": "2026-01-19T05:52:04.878+00:00",
       "draws": [
         {
           "draw_date": "2026-01-18",
