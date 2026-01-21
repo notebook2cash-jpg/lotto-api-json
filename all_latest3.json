@@ -1,18 +1,18 @@
 {
-  "updated_at": "2026-01-21T11:52:27.405+00:00",
+  "updated_at": "2026-01-21T13:58:15.422+00:00",
   "items": [
     {
       "key": "lao_pattana",
       "name": "หวยลาวพัฒนา",
       "source_url": "https://www.sanook.com/news/laolotto/",
-      "fetched_at": "2026-01-21T11:52:30.120+00:00",
+      "fetched_at": "2026-01-21T13:58:18.138+00:00",
       "draws": [
         {
           "draw_date": "2026-01-21",
-          "full_number": "xxxx",
-          "top3": "xxx",
-          "top2": "xxx",
-          "bottom2": "xxx"
+          "full_number": "9685",
+          "top3": "685",
+          "top2": "85",
+          "bottom2": "85"
         },
         {
           "draw_date": "2026-01-19",
@@ -34,8 +34,15 @@
       "key": "lao_samakkee",
       "name": "ลาวสามัคคี",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสามัคคี/",
-      "fetched_at": "2026-01-21T11:52:35.773+00:00",
+      "fetched_at": "2026-01-21T13:58:22.012+00:00",
       "draws": [
+        {
+          "draw_date": "2026-01-21",
+          "full_number": "46649",
+          "top3": "649",
+          "top2": "49",
+          "bottom2": "66"
+        },
         {
           "draw_date": "2026-01-20",
           "full_number": "85901",
@@ -49,13 +56,6 @@
           "top3": "362",
           "top2": "62",
           "bottom2": "23"
-        },
-        {
-          "draw_date": "2026-01-18",
-          "full_number": "50468",
-          "top3": "468",
-          "top2": "68",
-          "bottom2": "04"
         }
       ]
     },
@@ -63,7 +63,7 @@
       "key": "lao_vip",
       "name": "ลาว VIP",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาว-VIP/",
-      "fetched_at": "2026-01-21T11:53:00.972+00:00",
+      "fetched_at": "2026-01-21T13:58:24.539+00:00",
       "draws": [
         {
           "draw_date": "2026-01-20",
@@ -92,24 +92,24 @@
       "key": "lao_star",
       "name": "ลาวสตาร์",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสตาร์/",
-      "fetched_at": "2026-01-21T11:53:05.876+00:00",
+      "fetched_at": "2026-01-21T13:58:28.042+00:00",
       "draws": [
         {
-          "draw_date": "2026-01-21",
+          "draw_date": "2026-01-21T15:45:00+07:00",
           "full_number": "18493",
           "top3": "493",
           "top2": "93",
           "bottom2": "18"
         },
         {
-          "draw_date": "2026-01-20",
+          "draw_date": "2026-01-20T15:45:00+07:00",
           "full_number": "88275",
           "top3": "275",
           "top2": "75",
           "bottom2": "88"
         },
         {
-          "draw_date": "2026-01-19",
+          "draw_date": "2026-01-19T15:45:00+07:00",
           "full_number": "59478",
           "top3": "478",
           "top2": "78",
@@ -121,7 +121,7 @@
       "key": "lao_extra",
       "name": "ลาว Extra",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาว-Extra/",
-      "fetched_at": "2026-01-21T11:53:11.238+00:00",
+      "fetched_at": "2026-01-21T13:58:31.972+00:00",
       "draws": [
         {
           "draw_date": "2026-01-21",
@@ -150,28 +150,28 @@
       "key": "hanoi",
       "name": "ฮานอย",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยฮานอยปกติ/",
-      "fetched_at": "2026-01-21T11:53:14.587+00:00",
+      "fetched_at": "2026-01-21T13:58:34.668+00:00",
       "draws": [
         {
           "draw_date": "2026-01-20",
-          "full_number": "---",
-          "top3": "---",
+          "full_number": "00076",
+          "top3": "076",
           "top2": "76",
-          "bottom2": "---"
+          "bottom2": "76"
         },
         {
           "draw_date": "2026-01-19",
-          "full_number": "---",
-          "top3": "---",
+          "full_number": "00086",
+          "top3": "086",
           "top2": "86",
-          "bottom2": "---"
+          "bottom2": "86"
         },
         {
           "draw_date": "2026-01-18",
-          "full_number": "---",
-          "top3": "---",
+          "full_number": "00060",
+          "top3": "060",
           "top2": "60",
-          "bottom2": "---"
+          "bottom2": "60"
         }
       ]
     }
