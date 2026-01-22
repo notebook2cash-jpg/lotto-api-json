@@ -1,32 +1,32 @@
 {
-  "updated_at": "2026-01-22T19:02:57.749+00:00",
+  "updated_at": "2026-01-22T19:50:45.790+00:00",
   "items": [
     {
       "key": "lao_pattana",
       "name": "หวยลาวพัฒนา",
       "source_url": "https://www.sanook.com/news/laolotto/",
-      "fetched_at": "2026-01-22T19:03:00.800+00:00",
+      "fetched_at": "2026-01-22T19:50:48.797+00:00",
       "draws": [
         {
-          "draw_date": "2569-01-21",
+          "draw_date": "2026-01-21",
           "full_number": "9685",
           "top3": "685",
           "top2": "85",
-          "bottom2": "32"
+          "bottom2": "85"
         },
         {
-          "draw_date": "2569-01-19",
+          "draw_date": "2026-01-19",
           "full_number": "7789",
           "top3": "789",
           "top2": "89",
-          "bottom2": "40"
+          "bottom2": "89"
         },
         {
-          "draw_date": "2569-01-16",
+          "draw_date": "2026-01-16",
           "full_number": "4182",
           "top3": "182",
           "top2": "82",
-          "bottom2": "24"
+          "bottom2": "82"
         }
       ]
     },
@@ -34,7 +34,7 @@
       "key": "lao_samakkee",
       "name": "ลาวสามัคคี",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสามัคคี/",
-      "fetched_at": "2026-01-22T19:03:06.295+00:00",
+      "fetched_at": "2026-01-22T19:50:52.762+00:00",
       "draws": [
         {
           "draw_date": "2026-01-22",
@@ -63,7 +63,7 @@
       "key": "lao_vip",
       "name": "ลาว VIP",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาว-VIP/",
-      "fetched_at": "2026-01-22T19:03:13.655+00:00",
+      "fetched_at": "2026-01-22T19:50:55.422+00:00",
       "draws": [
         {
           "draw_date": "2026-01-22",
@@ -92,24 +92,24 @@
       "key": "lao_star",
       "name": "ลาวสตาร์",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสตาร์/",
-      "fetched_at": "2026-01-22T19:03:19.729+00:00",
+      "fetched_at": "2026-01-22T19:50:57.924+00:00",
       "draws": [
         {
-          "draw_date": "2026-01-22",
+          "draw_date": "2023-01-22",
           "full_number": "40130",
           "top3": "130",
           "top2": "30",
           "bottom2": "40"
         },
         {
-          "draw_date": "2026-01-21",
+          "draw_date": "2023-01-21",
           "full_number": "18493",
           "top3": "493",
           "top2": "93",
           "bottom2": "18"
         },
         {
-          "draw_date": "2026-01-20",
+          "draw_date": "2023-01-20",
           "full_number": "88275",
           "top3": "275",
           "top2": "75",
@@ -121,7 +121,7 @@
       "key": "lao_extra",
       "name": "ลาว Extra",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาว-Extra/",
-      "fetched_at": "2026-01-22T19:03:24.631+00:00",
+      "fetched_at": "2026-01-22T19:51:01.407+00:00",
       "draws": [
         {
           "draw_date": "22 ม.ค. 69",
@@ -150,28 +150,28 @@
       "key": "hanoi",
       "name": "ฮานอย",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยฮานอยปกติ/",
-      "fetched_at": "2026-01-22T19:03:30.764+00:00",
+      "fetched_at": "2026-01-22T19:51:04.210+00:00",
       "draws": [
         {
           "draw_date": "2026-01-22",
-          "full_number": "xxxxx",
-          "top3": "xxx",
-          "top2": "xx",
-          "bottom2": "41"
+          "full_number": "00041",
+          "top3": "041",
+          "top2": "41",
+          "bottom2": "69"
         },
         {
           "draw_date": "2026-01-21",
-          "full_number": "xxxxx",
-          "top3": "xxx",
-          "top2": "xx",
-          "bottom2": "96"
+          "full_number": "00096",
+          "top3": "096",
+          "top2": "96",
+          "bottom2": "69"
         },
         {
           "draw_date": "2026-01-20",
-          "full_number": "xxxxx",
-          "top3": "xxx",
-          "top2": "xx",
-          "bottom2": "76"
+          "full_number": "00076",
+          "top3": "076",
+          "top2": "76",
+          "bottom2": "69"
         }
       ]
     }
