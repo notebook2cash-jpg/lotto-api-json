@@ -2,7 +2,8 @@ name: Update Lao Santipap Latest 3
 
 on:
   schedule:
-    - cron: "*/30 * * * *"  # every 30 minutes
+    - cron: "30 9 * * *"   # 16:30 เวลาไทย (UTC+7)
+    - cron: "0 14 * * *"   # 21:00 เวลาไทย (UTC+7)
   workflow_dispatch: {}
 
 permissions:
