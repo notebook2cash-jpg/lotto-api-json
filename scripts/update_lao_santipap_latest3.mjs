@@ -2,6 +2,13 @@ import fs from "node:fs/promises";
 
 /* ================= CONFIG ================= */
 
+/** เวลาที่อนุญาตให้ดึงข้อมูล (เวลาไทย) — วันละ 2 ครั้ง */
+const ALLOWED_RUN_TIMES = [
+  { hour: 16, minute: 30 }, // 16:30
+  { hour: 21, minute: 0 },  // 21:00
+];
+const RUN_WINDOW_MINUTES = 5; // อนุญาตรันภายใน 5 นาทีหลังเวลาที่กำหนด
+
 const LOTTERIES = [
   {
     key: "lao_pattana",
@@ -44,6 +51,32 @@ function nowISO() {
   const hh = String(Math.floor(Math.abs(tz) / 60)).padStart(2, "0");
   const mm = String(Math.abs(tz) % 60).padStart(2, "0");
   return d.toISOString().replace("Z", `${sign}${hh}:${mm}`);
+}
+
+/** คืนค่า [ชม., นาที] ตามเวลาไทย (Asia/Bangkok) */
+function getBangkokHourMin() {
+  const d = new Date();
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Bangkok",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  const [h, m] = formatter.format(d).split(":").map(Number);
+  return [h, m];
+}
+
+/** เช็คว่าอยู่ในช่วงที่อนุญาตให้รัน (16:30 หรือ 21:00) หรือไม่ */
+function isAllowedRunTime() {
+  const [nowH, nowM] = getBangkokHourMin();
+  const nowMinutes = nowH * 60 + nowM;
+
+  for (const { hour, minute } of ALLOWED_RUN_TIMES) {
+    const start = hour * 60 + minute;
+    const end = start + RUN_WINDOW_MINUTES;
+    if (nowMinutes >= start && nowMinutes < end) return true;
+  }
+  return false;
 }
 
 async function fetchHtml(url) {
@@ -158,6 +191,20 @@ ${text}
 /* ================= MAIN ================= */
 
 async function main() {
+  // ✅ เช็คเวลาก่อน — ถ้าไม่ใช่ 16:30 หรือ 21:00 ให้ออกทันที
+  const [bh, bm] = getBangkokHourMin();
+  if (!isAllowedRunTime()) {
+    console.log(
+      `⏸ ไม่อยู่ในช่วงเวลาที่อนุญาต (16:30 หรือ 21:00). ` +
+        `ตอนนี้ ${String(bh).padStart(2, "0")}:${String(bm).padStart(2, "0")} — ออกจากโปรแกรม`
+    );
+    process.exit(0);
+  }
+
+  console.log(
+    `🕐 เริ่มดึงข้อมูลเวลา ${String(bh).padStart(2, "0")}:${String(bm).padStart(2, "0")}`
+  );
+
   const all = {
     updated_at: nowISO(),
     items: [],
@@ -165,7 +212,7 @@ async function main() {
 
   for (const lot of LOTTERIES) {
     console.log(`Processing: ${lot.name}...`);
-    
+
     try {
       const html = await fetchHtml(lot.url);
       const text = cleanText(html);
@@ -180,7 +227,7 @@ async function main() {
         fetched_at: json.fetched_at || nowISO(),
         draws: json.draws,
       });
-      
+
       console.log(`✅ ${lot.name} done`);
     } catch (err) {
       console.error(`❌ ${lot.name} failed:`, err.message);
