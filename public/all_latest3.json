@@ -1,0 +1,95 @@
+{
+  "updated_at": "2026-01-31T03:48:42.337+00:00",
+  "items": [
+    {
+      "key": "lao_pattana",
+      "name": "หวยลาวพัฒนา",
+      "source_url": "https://www.sanook.com/news/laolotto/",
+      "fetched_at": "2026-01-31T03:48:42.327+00:00",
+      "draws": [
+        {
+          "draw_date": "2026-01-30",
+          "full_number": "7039",
+          "top3": "039",
+          "top2": "39",
+          "bottom2": "39",
+          "pattana_numbers": [
+            "03",
+            "41",
+            "09",
+            "12",
+            "16"
+          ]
+        },
+        {
+          "draw_date": "2026-01-28",
+          "full_number": "3439",
+          "top3": "439",
+          "top2": "39",
+          "bottom2": "39",
+          "pattana_numbers": [
+            "28",
+            "38",
+            "45",
+            "22",
+            "27"
+          ]
+        },
+        {
+          "draw_date": "2026-01-26",
+          "full_number": "0932",
+          "top3": "932",
+          "top2": "32",
+          "bottom2": "32",
+          "pattana_numbers": [
+            "20",
+            "42",
+            "10",
+            "44",
+            "16"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "lao_samakkee",
+      "name": "ลาวสามัคคี",
+      "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสามัคคี/",
+      "fetched_at": "2026-01-31T03:48:42.331+00:00",
+      "draws": [],
+      "error": "Protocol error (Target.createTarget): Session with given id not found."
+    },
+    {
+      "key": "lao_vip",
+      "name": "ลาว VIP",
+      "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาว-VIP/",
+      "fetched_at": "2026-01-31T03:48:42.332+00:00",
+      "draws": [],
+      "error": "Protocol error (Target.createTarget): Session with given id not found."
+    },
+    {
+      "key": "lao_star",
+      "name": "ลาวสตาร์",
+      "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสตาร์/",
+      "fetched_at": "2026-01-31T03:48:42.332+00:00",
+      "draws": [],
+      "error": "Protocol error (Target.createTarget): Session with given id not found."
+    },
+    {
+      "key": "lao_extra",
+      "name": "ลาว Extra",
+      "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาว-Extra/",
+      "fetched_at": "2026-01-31T03:48:42.332+00:00",
+      "draws": [],
+      "error": "Protocol error (Target.createTarget): Session with given id not found."
+    },
+    {
+      "key": "hanoi",
+      "name": "ฮานอย",
+      "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยฮานอยปกติ/",
+      "fetched_at": "2026-01-31T03:48:42.337+00:00",
+      "draws": [],
+      "error": "Protocol error (Target.createTarget): Session with given id not found."
+    }
+  ]
+}
