@@ -1,0 +1,7 @@
+{
+  "name": "lotto-api-json",
+  "type": "module",
+  "dependencies": {
+    "puppeteer": "^23.11.1"
+  }
+}
