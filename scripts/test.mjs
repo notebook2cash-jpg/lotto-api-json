@@ -87,21 +87,37 @@ function buddhistYearToGregorian(buddhistYear) {
 }
 
 // ===== FETCH PAGE WITH PUPPETEER =====
-async function fetchPageContent(browser, url) {
-  const page = await browser.newPage();
-  
-  await page.setUserAgent(
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-  );
+async function fetchPageContent(url) {
+  // สร้าง browser ใหม่สำหรับแต่ละ URL เพื่อหลีกเลี่ยงปัญหา session หมดอายุ
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-accelerated-2d-canvas",
+      "--no-first-run",
+      "--no-zygote",
+      "--single-process",
+      "--disable-gpu",
+    ],
+  });
 
   try {
-    await page.goto(url, { waitUntil: "networkidle2", timeout: 30000 });
-    await new Promise((r) => setTimeout(r, 2000)); // รอ JS render
+    const page = await browser.newPage();
+    
+    await page.setUserAgent(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    );
+
+    await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
+    await new Promise((r) => setTimeout(r, 3000)); // รอ JS render
     
     const content = await page.evaluate(() => document.body.innerText);
+    await page.close();
     return content;
   } finally {
-    await page.close();
+    await browser.close();
   }
 }
 
@@ -263,11 +279,11 @@ function parseRaakaadeeHanoi(text) {
 }
 
 // ===== MAIN PROCESSING =====
-async function processLottery(browser, lottery) {
+async function processLottery(lottery) {
   console.log(`Fetching ${lottery.name} from ${lottery.source_url}...`);
 
   try {
-    const text = await fetchPageContent(browser, lottery.source_url);
+    const text = await fetchPageContent(lottery.source_url);
 
     let draws = [];
     switch (lottery.parser) {
@@ -312,34 +328,25 @@ async function processLottery(browser, lottery) {
 async function main() {
   console.log("Starting lottery data fetch with Puppeteer...\n");
 
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
+  const items = [];
 
-  try {
-    const items = [];
-
-    for (const lottery of LOTTERIES) {
-      const result = await processLottery(browser, lottery);
-      items.push(result);
-      console.log(`  ✓ ${lottery.name}: ${result.draws.length} draws\n`);
-    }
-
-    const output = {
-      updated_at: new Date().toISOString().replace("Z", "+00:00"),
-      items,
-    };
-
-    await fs.mkdir("public", { recursive: true });
-    const outputPath = "public/all_latest3.json";
-    await fs.writeFile(outputPath, JSON.stringify(output, null, 2), "utf-8");
-
-    console.log(`\n✅ Output saved to ${outputPath}`);
-    console.log(JSON.stringify(output, null, 2));
-  } finally {
-    await browser.close();
+  for (const lottery of LOTTERIES) {
+    const result = await processLottery(lottery);
+    items.push(result);
+    console.log(`  ✓ ${lottery.name}: ${result.draws.length} draws\n`);
   }
+
+  const output = {
+    updated_at: new Date().toISOString().replace("Z", "+00:00"),
+    items,
+  };
+
+  await fs.mkdir("public", { recursive: true });
+  const outputPath = "public/all_latest3.json";
+  await fs.writeFile(outputPath, JSON.stringify(output, null, 2), "utf-8");
+
+  console.log(`\n✅ Output saved to ${outputPath}`);
+  console.log(JSON.stringify(output, null, 2));
 }
 
 main().catch((err) => {
