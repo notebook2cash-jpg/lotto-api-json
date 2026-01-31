@@ -25,10 +25,13 @@ jobs:
         with:
           node-version: 20
 
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chrome for Puppeteer
+        run: npx puppeteer browsers install chrome
+
       - name: Run updater
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        #run: node scripts/update_lao_santipap_latest3.mjs
         run: node scripts/test.mjs
 
       - name: Commit & push if changed
