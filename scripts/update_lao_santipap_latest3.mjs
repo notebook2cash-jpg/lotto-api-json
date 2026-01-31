@@ -87,37 +87,54 @@ function buddhistYearToGregorian(buddhistYear) {
 }
 
 // ===== FETCH PAGE WITH PUPPETEER =====
-async function fetchPageContent(url) {
-  // สร้าง browser ใหม่สำหรับแต่ละ URL เพื่อหลีกเลี่ยงปัญหา session หมดอายุ
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-accelerated-2d-canvas",
-      "--no-first-run",
-      "--no-zygote",
-      "--single-process",
-      "--disable-gpu",
-    ],
-  });
+async function fetchPageContent(url, retries = 3) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-accelerated-2d-canvas",
+        "--no-first-run",
+        "--no-zygote",
+        "--disable-gpu",
+      ],
+    });
 
-  try {
-    const page = await browser.newPage();
-    
-    await page.setUserAgent(
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    );
+    try {
+      const page = await browser.newPage();
+      
+      await page.setUserAgent(
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+      );
 
-    await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
-    await new Promise((r) => setTimeout(r, 3000)); // รอ JS render
-    
-    const content = await page.evaluate(() => document.body.innerText);
-    await page.close();
-    return content;
-  } finally {
-    await browser.close();
+      // ใช้ domcontentloaded แทน networkidle2 เพื่อหลีกเลี่ยง navigation issues
+      await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
+      
+      // รอให้หน้า stable
+      await new Promise((r) => setTimeout(r, 5000));
+      
+      // ลอง evaluate หลายครั้งถ้า context ถูก destroy
+      let content = "";
+      for (let evalAttempt = 1; evalAttempt <= 3; evalAttempt++) {
+        try {
+          content = await page.evaluate(() => document.body.innerText);
+          break;
+        } catch (evalError) {
+          if (evalAttempt === 3) throw evalError;
+          await new Promise((r) => setTimeout(r, 2000));
+        }
+      }
+      
+      await browser.close();
+      return content;
+    } catch (error) {
+      await browser.close();
+      console.warn(`  Attempt ${attempt}/${retries} failed: ${error.message}`);
+      if (attempt === retries) throw error;
+      await new Promise((r) => setTimeout(r, 3000)); // รอก่อน retry
+    }
   }
 }
 
