@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-02-03T16:10:17.511+00:00",
+  "updated_at": "2026-02-03T16:36:45.816+00:00",
   "items": [
     {
       "key": "lao_pattana",
       "name": "หวยลาวพัฒนา",
       "source_url": "https://www.sanook.com/news/laolotto/",
-      "fetched_at": "2026-02-03T16:09:50.245+00:00",
+      "fetched_at": "2026-02-03T16:36:18.178+00:00",
       "draws": [
         {
           "draw_date": "2026-02-02",
@@ -55,7 +55,7 @@
       "key": "lao_samakkee",
       "name": "ลาวสามัคคี",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสามัคคี/",
-      "fetched_at": "2026-02-03T16:09:55.799+00:00",
+      "fetched_at": "2026-02-03T16:36:23.970+00:00",
       "draws": [
         {
           "draw_date": "2026-02-03",
@@ -84,7 +84,7 @@
       "key": "lao_vip",
       "name": "ลาว VIP",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาว-VIP/",
-      "fetched_at": "2026-02-03T16:10:01.225+00:00",
+      "fetched_at": "2026-02-03T16:36:29.467+00:00",
       "draws": [
         {
           "draw_date": "2026-02-03",
@@ -113,7 +113,7 @@
       "key": "lao_star",
       "name": "ลาวสตาร์",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสตาร์/",
-      "fetched_at": "2026-02-03T16:10:06.662+00:00",
+      "fetched_at": "2026-02-03T16:36:34.917+00:00",
       "draws": [
         {
           "draw_date": "2026-02-03",
@@ -142,7 +142,7 @@
       "key": "lao_extra",
       "name": "ลาว Extra",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาว-Extra/",
-      "fetched_at": "2026-02-03T16:10:12.098+00:00",
+      "fetched_at": "2026-02-03T16:36:40.326+00:00",
       "draws": [
         {
           "draw_date": "3 ก.พ. 69",
@@ -171,7 +171,7 @@
       "key": "hanoi",
       "name": "ฮานอย",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยฮานอยปกติ/",
-      "fetched_at": "2026-02-03T16:10:17.511+00:00",
+      "fetched_at": "2026-02-03T16:36:45.816+00:00",
       "draws": [
         {
           "draw_date": "2026-02-03",
