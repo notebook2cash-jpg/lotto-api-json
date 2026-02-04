@@ -262,13 +262,15 @@ function parseRaakaadeeNoDateConvert(text) {
   return draws;
 }
 
+
 // ===== RAAKAADEE HANOI PARSER =====
 function parseRaakaadeeHanoi(text) {
   const draws = [];
 
-  // ฮานอยมีแค่เลข 2 ตัวล่าง ไม่มี full_number
-  // Pattern: "29 ม.ค. 69...2 ตัวล่าง 90"
-  const drawRegex = /(\d{1,2})\s*(ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)\s*(\d{2,4})[\s\S]*?2\s*ตัวล่าง\s*(\d{2})/g;
+  // Pattern ใหม่: รองรับชื่อย่อวันข้างหน้า และ | คั่นเลข
+  // ตัวอย่าง: "ศ. 30 ม.ค. 69เวลา18:30น....2 ตัวล่าง|09|"
+  // หรือ: "ส. 3 ม.ค. 69...หวยออก|00949|...2 ตัวล่าง|57|"
+  const drawRegex = /(?:[อ-ฮ]+\.?\s*)?(\d{1,2})\s*(ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)\s*(\d{2,4})[\s\S]*?2\s*ตัวล่าง\|?(\d{2})/g;
 
   let match;
   while ((match = drawRegex.exec(text)) !== null && draws.length < 3) {
@@ -282,7 +284,6 @@ function parseRaakaadeeHanoi(text) {
     const drawDate = `${year}-${month}-${day}`;
     const bottom2 = match[4];
 
-    // ฮานอย: full_number เป็น "", top3/top2/bottom2 เป็นเลข 2 หลักเดียวกัน
     draws.push({
       draw_date: drawDate,
       full_number: "",
