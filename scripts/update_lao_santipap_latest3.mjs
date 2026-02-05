@@ -294,8 +294,7 @@ function parseRaakaadeeHanoi(text) {
   return draws;
 }
 
-  return draws;
-}
+
 
 // ===== MAIN PROCESSING =====
 async function processLottery(lottery) {
