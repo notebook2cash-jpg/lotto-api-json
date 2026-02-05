@@ -267,10 +267,9 @@ function parseRaakaadeeNoDateConvert(text) {
 function parseRaakaadeeHanoi(text) {
   const draws = [];
 
-  // Pattern ใหม่: รองรับชื่อย่อวันข้างหน้า และ | คั่นเลข
-  // ตัวอย่าง: "ศ. 30 ม.ค. 69เวลา18:30น....2 ตัวล่าง|09|"
-  // หรือ: "ส. 3 ม.ค. 69...หวยออก|00949|...2 ตัวล่าง|57|"
-  const drawRegex = /(?:[อ-ฮ]+\.?\s*)?(\d{1,2})\s*(ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)\s*(\d{2,4})[\s\S]*?2\s*ตัวล่าง\|?(\d{2})/g;
+  // Pattern ใหม่: รองรับชื่อย่อวัน และ | หรือ space คั่นเลข
+  // ตัวอย่าง: "พ. 4 ก.พ. 69เวลา18:30น...หวยออก|06517|...3 ตัวบน|517|...2 ตัวบน|17|...2 ตัวล่าง|20|"
+  const drawRegex = /(?:[ก-ฮ]+\.?\s*)?(\d{1,2})\s*(ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)\s*(\d{2,4})[\s\S]*?หวยออก[|\s]*(\d{5})[\s\S]*?3\s*ตัวบน[|\s]*(\d{3})[\s\S]*?2\s*ตัวบน[|\s]*(\d{2})[\s\S]*?2\s*ตัวล่าง[|\s]*(\d{2})/g;
 
   let match;
   while ((match = drawRegex.exec(text)) !== null && draws.length < 3) {
@@ -282,16 +281,18 @@ function parseRaakaadeeHanoi(text) {
 
     const year = buddhistYearToGregorian(parseInt(yearStr, 10));
     const drawDate = `${year}-${month}-${day}`;
-    const bottom2 = match[4];
 
     draws.push({
       draw_date: drawDate,
-      full_number: "",
-      top3: bottom2,
-      top2: bottom2,
-      bottom2: bottom2,
+      full_number: match[4],  // 06517
+      top3: match[5],          // 517
+      top2: match[6],          // 17
+      bottom2: match[7],       // 20
     });
   }
+
+  return draws;
+}
 
   return draws;
 }
