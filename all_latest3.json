@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-02-10T17:34:42.870+00:00",
+  "updated_at": "2026-02-10T17:38:40.867+00:00",
   "items": [
     {
       "key": "lao_pattana",
       "name": "หวยลาวพัฒนา",
       "source_url": "https://www.sanook.com/news/laolotto/",
-      "fetched_at": "2026-02-10T17:34:15.075+00:00",
+      "fetched_at": "2026-02-10T17:38:12.980+00:00",
       "draws": [
         {
           "draw_date": "2026-02-09",
@@ -55,7 +55,7 @@
       "key": "lao_samakkee",
       "name": "ลาวสามัคคี",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสามัคคี/",
-      "fetched_at": "2026-02-10T17:34:20.730+00:00",
+      "fetched_at": "2026-02-10T17:38:18.635+00:00",
       "draws": [
         {
           "draw_date": "2026-02-10",
@@ -84,7 +84,7 @@
       "key": "lao_vip",
       "name": "ลาว VIP",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาว-VIP/",
-      "fetched_at": "2026-02-10T17:34:26.220+00:00",
+      "fetched_at": "2026-02-10T17:38:24.206+00:00",
       "draws": [
         {
           "draw_date": "2026-02-10",
@@ -113,7 +113,7 @@
       "key": "lao_star",
       "name": "ลาวสตาร์",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสตาร์/",
-      "fetched_at": "2026-02-10T17:34:31.790+00:00",
+      "fetched_at": "2026-02-10T17:38:29.751+00:00",
       "draws": [
         {
           "draw_date": "2026-02-10",
@@ -142,7 +142,7 @@
       "key": "lao_extra",
       "name": "ลาว Extra",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาว-Extra/",
-      "fetched_at": "2026-02-10T17:34:37.389+00:00",
+      "fetched_at": "2026-02-10T17:38:35.410+00:00",
       "draws": [
         {
           "draw_date": "10 ก.พ. 69",
@@ -171,7 +171,7 @@
       "key": "hanoi",
       "name": "ฮานอย",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยฮานอยปกติ/",
-      "fetched_at": "2026-02-10T17:34:42.870+00:00",
+      "fetched_at": "2026-02-10T17:38:40.867+00:00",
       "draws": [
         {
           "draw_date": "2026-02-10",
