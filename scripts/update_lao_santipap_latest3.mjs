@@ -1,13 +1,24 @@
 import fs from "node:fs/promises";
 import puppeteer from "puppeteer";
 
+// ===== PAGE CACHE =====
+// เก็บ cache เพื่อไม่ต้อง fetch URL เดิมซ้ำ (sanook ใช้ร่วม 2 หวย)
+const pageCache = new Map();
+
 // ===== LOTTERIES CONFIGURATION =====
 const LOTTERIES = [
+  {
+    key: "lao",
+    name: "หวยลาว",
+    source_url: "https://www.sanook.com/news/laolotto/",
+    parser: "sanook_lao",
+    drawCount: 3,
+  },
   {
     key: "lao_pattana",
     name: "หวยลาวพัฒนา",
     source_url: "https://www.sanook.com/news/laolotto/",
-    parser: "sanook",
+    parser: "sanook_pattana",
     drawCount: 3,
   },
   {
@@ -86,8 +97,14 @@ function buddhistYearToGregorian(buddhistYear) {
   return buddhistYear - 543;
 }
 
-// ===== FETCH PAGE WITH PUPPETEER =====
+// ===== FETCH PAGE WITH PUPPETEER (with cache) =====
 async function fetchPageContent(url, retries = 3) {
+  // ถ้า URL นี้เคย fetch แล้ว ใช้ cache
+  if (pageCache.has(url)) {
+    console.log(`  📦 Using cached content for ${url}`);
+    return pageCache.get(url);
+  }
+
   for (let attempt = 1; attempt <= retries; attempt++) {
     const browser = await puppeteer.launch({
       headless: true,
@@ -125,6 +142,9 @@ async function fetchPageContent(url, retries = 3) {
       }
 
       await browser.close();
+
+      // เก็บ cache
+      pageCache.set(url, content);
       return content;
     } catch (error) {
       await browser.close();
@@ -135,95 +155,64 @@ async function fetchPageContent(url, retries = 3) {
   }
 }
 
-// ===== SANOOK PARSER (lao_pattana) =====
-function parseSanook(text) {
+// ===== HELPER: parse วันที่จาก Sanook =====
+function parseSanookDate(text) {
+  const m = text.match(
+    /(\d{1,2})\s*(มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)\s*(\d{4})/
+  );
+  if (!m) return null;
+  const day = m[1].padStart(2, "0");
+  const month = THAI_MONTHS[m[2]];
+  const year = buddhistYearToGregorian(parseInt(m[3], 10));
+  return `${year}-${month}-${day}`;
+}
+
+// ===== SANOOK PARSER: หวยลาว (main: เลขท้าย 4/3/2 ตัว) =====
+function parseSanookLao(text) {
   const draws = [];
 
-  // แบ่ง text เป็น "ส่วนงวดล่าสุด" กับ "ส่วนย้อนหลัง"
-  // เพื่อป้องกัน regex จับตัวเลขงวดเก่ามาใส่งวดล่าสุดที่ยังไม่ออก (xxxx)
+  // แบ่งส่วนล่าสุด vs ย้อนหลัง
   const historySplitIndex = text.search(
     /ตรวจหวยลาว\s*ย้อนหลัง|ตรวจหวยลาว\s*งวดประจำวันที่/
   );
   const latestSection =
     historySplitIndex > 0 ? text.slice(0, historySplitIndex) : text;
 
-  // หาวันที่ล่าสุดจาก title (เฉพาะส่วนบน)
+  // วันที่ล่าสุดจาก title
   const latestDateMatch = latestSection.match(
     /ตรวจหวยลาว\s*(\d{1,2})\s*(มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)\s*(\d{4})/
   );
+  const latestDate = latestDateMatch ? parseSanookDate(latestDateMatch[0]) : null;
 
-  let latestDate = null;
-  if (latestDateMatch) {
-    const day = latestDateMatch[1].padStart(2, "0");
-    const month = THAI_MONTHS[latestDateMatch[2]];
-    const year = buddhistYearToGregorian(parseInt(latestDateMatch[3], 10));
-    latestDate = `${year}-${month}-${day}`;
-  }
-
-  // หาเลข 4 ตัว -- เฉพาะใน latestSection (ไม่ให้หลุดไปจับงวดย้อนหลัง)
-  const fullNumberMatch = latestSection.match(
-    /เลขท้าย\s*4\s*ตัว\s*(\d{4})/
-  );
-  const fullNumber = fullNumberMatch ? fullNumberMatch[1] : "xxxx";
-
-  // หาเลข 3 ตัว
+  // ดึงเลขจาก latestSection เท่านั้น
+  const fullMatch = latestSection.match(/เลขท้าย\s*4\s*ตัว\s*(\d{4})/);
   const top3Match = latestSection.match(/เลขท้าย\s*3\s*ตัว\s*(\d{3})/);
-  const top3 = top3Match ? top3Match[1] : "xxx";
-
-  // หาเลข 2 ตัว
   const top2Match = latestSection.match(/เลขท้าย\s*2\s*ตัว\s*(\d{2})/);
-  const top2 = top2Match ? top2Match[1] : "xx";
 
-  // หาหวยลาวพัฒนา 5 เลข (เฉพาะ latestSection)
-  let pattanaNumbers = [];
-  const pattanaMatch = latestSection.match(
-    /หวยลาวพัฒนา\s*(\d{2})\s*(\d{2})\s*(\d{2})\s*(\d{2})\s*(\d{2})/
-  );
-  if (pattanaMatch) {
-    pattanaNumbers = [
-      pattanaMatch[1],
-      pattanaMatch[2],
-      pattanaMatch[3],
-      pattanaMatch[4],
-      pattanaMatch[5],
-    ];
-  } else {
-    pattanaNumbers = ["xx", "xx", "xx", "xx", "xx"];
-  }
-
-  // สร้าง entry งวดล่าสุดเสมอ (ออกผลแล้ว หรือ รอผลก็ตาม)
   if (latestDate) {
     draws.push({
       draw_date: latestDate,
-      full_number: fullNumber,
-      top3,
-      top2,
-      bottom2: top2,
-      pattana_numbers: pattanaNumbers,
+      full_number: fullMatch ? fullMatch[1] : "xxxx",
+      top3: top3Match ? top3Match[1] : "xxx",
+      top2: top2Match ? top2Match[1] : "xx",
+      bottom2: top2Match ? top2Match[1] : "xx",
     });
 
-    if (fullNumber === "xxxx") {
+    if (!fullMatch) {
       console.log(`    ⏳ งวดล่าสุด ${latestDate}: รอออกผล`);
     } else {
-      console.log(`    ✅ งวดล่าสุด ${latestDate}: ${fullNumber}`);
+      console.log(`    ✅ งวดล่าสุด ${latestDate}: ${fullMatch[1]}`);
     }
   }
 
-  // ย้อนหลัง: ใช้ text ทั้งหมด แต่ regex จับเฉพาะ "งวดประจำวันที่..."
+  // ย้อนหลัง
   const historyRegex =
-    /งวดประจำวันที่\s*(\d{1,2})\s*(มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)\s*(\d{4})[\s\S]*?เลขท้าย\s*4\s*ตัว\s*(\d{4})[\s\S]*?เลขท้าย\s*3\s*ตัว\s*(\d{3})[\s\S]*?เลขท้าย\s*2\s*ตัว\s*(\d{2})[\s\S]*?หวยลาวพัฒนา\s*(\d{2})\s*(\d{2})\s*(\d{2})\s*(\d{2})\s*(\d{2})/g;
+    /งวดประจำวันที่\s*(\d{1,2})\s*(มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)\s*(\d{4})[\s\S]*?เลขท้าย\s*4\s*ตัว\s*(\d{4})[\s\S]*?เลขท้าย\s*3\s*ตัว\s*(\d{3})[\s\S]*?เลขท้าย\s*2\s*ตัว\s*(\d{2})/g;
 
   let match;
   while ((match = historyRegex.exec(text)) !== null && draws.length < 3) {
-    const day = match[1].padStart(2, "0");
-    const month = THAI_MONTHS[match[2]];
-    const year = buddhistYearToGregorian(parseInt(match[3], 10));
-    const drawDate = `${year}-${month}-${day}`;
-
-    // ป้องกัน duplicate
-    if (draws.some((d) => d.draw_date === drawDate)) {
-      continue;
-    }
+    const drawDate = parseSanookDate(match[0]);
+    if (!drawDate || draws.some((d) => d.draw_date === drawDate)) continue;
 
     draws.push({
       draw_date: drawDate,
@@ -231,7 +220,61 @@ function parseSanook(text) {
       top3: match[5],
       top2: match[6],
       bottom2: match[6],
-      pattana_numbers: [match[7], match[8], match[9], match[10], match[11]],
+    });
+  }
+
+  return draws;
+}
+
+// ===== SANOOK PARSER: หวยลาวพัฒนา (5 เลข 2 หลัก) =====
+function parseSanookPattana(text) {
+  const draws = [];
+
+  // แบ่งส่วนล่าสุด vs ย้อนหลัง
+  const historySplitIndex = text.search(
+    /ตรวจหวยลาว\s*ย้อนหลัง|ตรวจหวยลาว\s*งวดประจำวันที่/
+  );
+  const latestSection =
+    historySplitIndex > 0 ? text.slice(0, historySplitIndex) : text;
+
+  // วันที่ล่าสุดจาก title
+  const latestDateMatch = latestSection.match(
+    /ตรวจหวยลาว\s*(\d{1,2})\s*(มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)\s*(\d{4})/
+  );
+  const latestDate = latestDateMatch ? parseSanookDate(latestDateMatch[0]) : null;
+
+  // ดึงเลขพัฒนาจาก latestSection เท่านั้น
+  const pattanaMatch = latestSection.match(
+    /หวยลาวพัฒนา\s*(\d{2})\s*(\d{2})\s*(\d{2})\s*(\d{2})\s*(\d{2})/
+  );
+
+  if (latestDate) {
+    draws.push({
+      draw_date: latestDate,
+      pattana_numbers: pattanaMatch
+        ? [pattanaMatch[1], pattanaMatch[2], pattanaMatch[3], pattanaMatch[4], pattanaMatch[5]]
+        : ["xx", "xx", "xx", "xx", "xx"],
+    });
+
+    if (!pattanaMatch) {
+      console.log(`    ⏳ งวดล่าสุด ${latestDate}: รอออกผล`);
+    } else {
+      console.log(`    ✅ งวดล่าสุด ${latestDate}: ${pattanaMatch.slice(1, 6).join(" ")}`);
+    }
+  }
+
+  // ย้อนหลัง
+  const historyRegex =
+    /งวดประจำวันที่\s*(\d{1,2})\s*(มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)\s*(\d{4})[\s\S]*?หวยลาวพัฒนา\s*(\d{2})\s*(\d{2})\s*(\d{2})\s*(\d{2})\s*(\d{2})/g;
+
+  let match;
+  while ((match = historyRegex.exec(text)) !== null && draws.length < 3) {
+    const drawDate = parseSanookDate(match[0]);
+    if (!drawDate || draws.some((d) => d.draw_date === drawDate)) continue;
+
+    draws.push({
+      draw_date: drawDate,
+      pattana_numbers: [match[4], match[5], match[6], match[7], match[8]],
     });
   }
 
@@ -330,8 +373,11 @@ async function processLottery(lottery) {
 
     let draws = [];
     switch (lottery.parser) {
-      case "sanook":
-        draws = parseSanook(text);
+      case "sanook_lao":
+        draws = parseSanookLao(text);
+        break;
+      case "sanook_pattana":
+        draws = parseSanookPattana(text);
         break;
       case "raakaadee":
         draws = parseRaakaadee(text);
