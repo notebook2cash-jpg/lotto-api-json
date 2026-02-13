@@ -139,10 +139,8 @@ async function fetchPageContent(url, retries = 3) {
 function parseSanook(text) {
   const draws = [];
 
-  // ======================================================================
-  // FIX: แบ่ง text เป็น "ส่วนงวดล่าสุด" กับ "ส่วนย้อนหลัง"
+  // แบ่ง text เป็น "ส่วนงวดล่าสุด" กับ "ส่วนย้อนหลัง"
   // เพื่อป้องกัน regex จับตัวเลขงวดเก่ามาใส่งวดล่าสุดที่ยังไม่ออก (xxxx)
-  // ======================================================================
   const historySplitIndex = text.search(
     /ตรวจหวยลาว\s*ย้อนหลัง|ตรวจหวยลาว\s*งวดประจำวันที่/
   );
@@ -166,15 +164,15 @@ function parseSanook(text) {
   const fullNumberMatch = latestSection.match(
     /เลขท้าย\s*4\s*ตัว\s*(\d{4})/
   );
-  const fullNumber = fullNumberMatch ? fullNumberMatch[1] : "";
+  const fullNumber = fullNumberMatch ? fullNumberMatch[1] : "xxxx";
 
   // หาเลข 3 ตัว
   const top3Match = latestSection.match(/เลขท้าย\s*3\s*ตัว\s*(\d{3})/);
-  const top3 = top3Match ? top3Match[1] : "";
+  const top3 = top3Match ? top3Match[1] : "xxx";
 
   // หาเลข 2 ตัว
   const top2Match = latestSection.match(/เลขท้าย\s*2\s*ตัว\s*(\d{2})/);
-  const top2 = top2Match ? top2Match[1] : "";
+  const top2 = top2Match ? top2Match[1] : "xx";
 
   // หาหวยลาวพัฒนา 5 เลข (เฉพาะ latestSection)
   let pattanaNumbers = [];
@@ -189,10 +187,12 @@ function parseSanook(text) {
       pattanaMatch[4],
       pattanaMatch[5],
     ];
+  } else {
+    pattanaNumbers = ["xx", "xx", "xx", "xx", "xx"];
   }
 
-  // สร้าง entry เฉพาะเมื่อผลออกแล้ว (มีตัวเลขจริง ไม่ใช่ xxxx)
-  if (latestDate && fullNumber) {
+  // สร้าง entry งวดล่าสุดเสมอ (ออกผลแล้ว หรือ รอผลก็ตาม)
+  if (latestDate) {
     draws.push({
       draw_date: latestDate,
       full_number: fullNumber,
@@ -201,11 +201,12 @@ function parseSanook(text) {
       bottom2: top2,
       pattana_numbers: pattanaNumbers,
     });
-    console.log(`    ✅ งวดล่าสุด ${latestDate}: ${fullNumber}`);
-  } else if (latestDate) {
-    console.log(
-      `    ⏳ งวดล่าสุด ${latestDate}: ยังไม่ออกผล (xxxx) - ข้ามไป`
-    );
+
+    if (fullNumber === "xxxx") {
+      console.log(`    ⏳ งวดล่าสุด ${latestDate}: รอออกผล`);
+    } else {
+      console.log(`    ✅ งวดล่าสุด ${latestDate}: ${fullNumber}`);
+    }
   }
 
   // ย้อนหลัง: ใช้ text ทั้งหมด แต่ regex จับเฉพาะ "งวดประจำวันที่..."
@@ -219,7 +220,7 @@ function parseSanook(text) {
     const year = buddhistYearToGregorian(parseInt(match[3], 10));
     const drawDate = `${year}-${month}-${day}`;
 
-    // ป้องกัน duplicate: ข้ามถ้าวันที่ซ้ำกับงวดล่าสุดที่ดึงมาแล้ว
+    // ป้องกัน duplicate
     if (draws.some((d) => d.draw_date === drawDate)) {
       continue;
     }
