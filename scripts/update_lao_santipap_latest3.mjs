@@ -160,7 +160,7 @@ function parseSanookDate(text) {
   return `${year}-${month}-${day}`;
 }
 
-// ===== SANOOK PARSER: หวยลาว (main: เลขท้าย 4/3/2 ตัว) =====
+// ===== SANOOK PARSER: หวยลาวพัฒนา (เลขท้าย 4/3/2 ตัว + พัฒนา 5 เลข) =====
 function parseSanookLao(text) {
   const draws = [];
 
@@ -175,12 +175,19 @@ function parseSanookLao(text) {
   const latestDateMatch = latestSection.match(
     /ตรวจหวยลาว\s*(\d{1,2})\s*(มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)\s*(\d{4})/
   );
-  const latestDate = latestDateMatch ? parseSanookDate(latestDateMatch[0]) : null;
+  const latestDate = latestDateMatch
+    ? parseSanookDate(latestDateMatch[0])
+    : null;
 
   // ดึงเลขจาก latestSection เท่านั้น
   const fullMatch = latestSection.match(/เลขท้าย\s*4\s*ตัว\s*(\d{4})/);
   const top3Match = latestSection.match(/เลขท้าย\s*3\s*ตัว\s*(\d{3})/);
   const top2Match = latestSection.match(/เลขท้าย\s*2\s*ตัว\s*(\d{2})/);
+
+  // หวยลาวพัฒนา 5 เลข (เฉพาะ latestSection)
+  const pattanaMatch = latestSection.match(
+    /หวยลาวพัฒนา\s*(\d{2})\s*(\d{2})\s*(\d{2})\s*(\d{2})\s*(\d{2})/
+  );
 
   if (latestDate) {
     draws.push({
@@ -189,6 +196,9 @@ function parseSanookLao(text) {
       top3: top3Match ? top3Match[1] : "xxx",
       top2: top2Match ? top2Match[1] : "xx",
       bottom2: top2Match ? top2Match[1] : "xx",
+      pattana_numbers: pattanaMatch
+        ? [pattanaMatch[1], pattanaMatch[2], pattanaMatch[3], pattanaMatch[4], pattanaMatch[5]]
+        : ["xx", "xx", "xx", "xx", "xx"],
     });
 
     if (!fullMatch) {
@@ -200,7 +210,7 @@ function parseSanookLao(text) {
 
   // ย้อนหลัง
   const historyRegex =
-    /งวดประจำวันที่\s*(\d{1,2})\s*(มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)\s*(\d{4})[\s\S]*?เลขท้าย\s*4\s*ตัว\s*(\d{4})[\s\S]*?เลขท้าย\s*3\s*ตัว\s*(\d{3})[\s\S]*?เลขท้าย\s*2\s*ตัว\s*(\d{2})/g;
+    /งวดประจำวันที่\s*(\d{1,2})\s*(มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)\s*(\d{4})[\s\S]*?เลขท้าย\s*4\s*ตัว\s*(\d{4})[\s\S]*?เลขท้าย\s*3\s*ตัว\s*(\d{3})[\s\S]*?เลขท้าย\s*2\s*ตัว\s*(\d{2})[\s\S]*?หวยลาวพัฒนา\s*(\d{2})\s*(\d{2})\s*(\d{2})\s*(\d{2})\s*(\d{2})/g;
 
   let match;
   while ((match = historyRegex.exec(text)) !== null && draws.length < 3) {
@@ -213,19 +223,20 @@ function parseSanookLao(text) {
       top3: match[5],
       top2: match[6],
       bottom2: match[6],
+      pattana_numbers: [match[7], match[8], match[9], match[10], match[11]],
     });
   }
 
   return draws;
 }
 
-
 // ===== RAAKAADEE PARSER =====
+// FIX: เปลี่ยน \s* เป็น [|\s]* เพื่อรองรับ | (pipe) ที่เว็บเปลี่ยนมาใช้
 function parseRaakaadee(text) {
   const draws = [];
 
   const drawRegex =
-    /(\d{1,2})\s*(ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)\s*(\d{2,4})[\s\S]*?หวยออก\s*(\d{5})[\s\S]*?3\s*ตัวบน\s*(\d{3})[\s\S]*?2\s*ตัวบน\s*(\d{2})[\s\S]*?2\s*ตัวล่าง\s*(\d{2})/g;
+    /(\d{1,2})\s*(ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)\s*(\d{2,4})[\s\S]*?หวยออก[|\s]*(\d{5})[\s\S]*?3\s*ตัวบน[|\s]*(\d{3})[\s\S]*?2\s*ตัวบน[|\s]*(\d{2})[\s\S]*?2\s*ตัวล่าง[|\s]*(\d{2})/g;
 
   let match;
   while ((match = drawRegex.exec(text)) !== null && draws.length < 3) {
@@ -251,11 +262,12 @@ function parseRaakaadee(text) {
 }
 
 // ===== RAAKAADEE ไม่แปลงวันที่ (lao_extra) =====
+// FIX: เปลี่ยน \s* เป็น [|\s]* เช่นกัน
 function parseRaakaadeeNoDateConvert(text) {
   const draws = [];
 
   const drawRegex =
-    /(\d{1,2}\s*(?:ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)\s*\d{2,4})[\s\S]*?หวยออก\s*(\d{5})[\s\S]*?3\s*ตัวบน\s*(\d{3})[\s\S]*?2\s*ตัวบน\s*(\d{2})[\s\S]*?2\s*ตัวล่าง\s*(\d{2})/g;
+    /(\d{1,2}\s*(?:ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)\s*\d{2,4})[\s\S]*?หวยออก[|\s]*(\d{5})[\s\S]*?3\s*ตัวบน[|\s]*(\d{3})[\s\S]*?2\s*ตัวบน[|\s]*(\d{2})[\s\S]*?2\s*ตัวล่าง[|\s]*(\d{2})/g;
 
   let match;
   while ((match = drawRegex.exec(text)) !== null && draws.length < 3) {
@@ -274,6 +286,7 @@ function parseRaakaadeeNoDateConvert(text) {
 }
 
 // ===== RAAKAADEE HANOI PARSER =====
+// (ไม่ต้องแก้ มี [|\s]* อยู่แล้ว)
 function parseRaakaadeeHanoi(text) {
   const draws = [];
 
