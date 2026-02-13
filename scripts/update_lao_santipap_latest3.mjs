@@ -8,17 +8,10 @@ const pageCache = new Map();
 // ===== LOTTERIES CONFIGURATION =====
 const LOTTERIES = [
   {
-    key: "lao",
-    name: "หวยลาว",
-    source_url: "https://www.sanook.com/news/laolotto/",
-    parser: "sanook_lao",
-    drawCount: 3,
-  },
-  {
     key: "lao_pattana",
     name: "หวยลาวพัฒนา",
     source_url: "https://www.sanook.com/news/laolotto/",
-    parser: "sanook_pattana",
+    parser: "sanook_lao",
     drawCount: 3,
   },
   {
@@ -226,60 +219,6 @@ function parseSanookLao(text) {
   return draws;
 }
 
-// ===== SANOOK PARSER: หวยลาวพัฒนา (5 เลข 2 หลัก) =====
-function parseSanookPattana(text) {
-  const draws = [];
-
-  // แบ่งส่วนล่าสุด vs ย้อนหลัง
-  const historySplitIndex = text.search(
-    /ตรวจหวยลาว\s*ย้อนหลัง|ตรวจหวยลาว\s*งวดประจำวันที่/
-  );
-  const latestSection =
-    historySplitIndex > 0 ? text.slice(0, historySplitIndex) : text;
-
-  // วันที่ล่าสุดจาก title
-  const latestDateMatch = latestSection.match(
-    /ตรวจหวยลาว\s*(\d{1,2})\s*(มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)\s*(\d{4})/
-  );
-  const latestDate = latestDateMatch ? parseSanookDate(latestDateMatch[0]) : null;
-
-  // ดึงเลขพัฒนาจาก latestSection เท่านั้น
-  const pattanaMatch = latestSection.match(
-    /หวยลาวพัฒนา\s*(\d{2})\s*(\d{2})\s*(\d{2})\s*(\d{2})\s*(\d{2})/
-  );
-
-  if (latestDate) {
-    draws.push({
-      draw_date: latestDate,
-      pattana_numbers: pattanaMatch
-        ? [pattanaMatch[1], pattanaMatch[2], pattanaMatch[3], pattanaMatch[4], pattanaMatch[5]]
-        : ["xx", "xx", "xx", "xx", "xx"],
-    });
-
-    if (!pattanaMatch) {
-      console.log(`    ⏳ งวดล่าสุด ${latestDate}: รอออกผล`);
-    } else {
-      console.log(`    ✅ งวดล่าสุด ${latestDate}: ${pattanaMatch.slice(1, 6).join(" ")}`);
-    }
-  }
-
-  // ย้อนหลัง
-  const historyRegex =
-    /งวดประจำวันที่\s*(\d{1,2})\s*(มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)\s*(\d{4})[\s\S]*?หวยลาวพัฒนา\s*(\d{2})\s*(\d{2})\s*(\d{2})\s*(\d{2})\s*(\d{2})/g;
-
-  let match;
-  while ((match = historyRegex.exec(text)) !== null && draws.length < 3) {
-    const drawDate = parseSanookDate(match[0]);
-    if (!drawDate || draws.some((d) => d.draw_date === drawDate)) continue;
-
-    draws.push({
-      draw_date: drawDate,
-      pattana_numbers: [match[4], match[5], match[6], match[7], match[8]],
-    });
-  }
-
-  return draws;
-}
 
 // ===== RAAKAADEE PARSER =====
 function parseRaakaadee(text) {
@@ -375,9 +314,6 @@ async function processLottery(lottery) {
     switch (lottery.parser) {
       case "sanook_lao":
         draws = parseSanookLao(text);
-        break;
-      case "sanook_pattana":
-        draws = parseSanookPattana(text);
         break;
       case "raakaadee":
         draws = parseRaakaadee(text);
