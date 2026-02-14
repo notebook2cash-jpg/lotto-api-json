@@ -8,7 +8,7 @@ const pageCache = new Map();
 const LOTTERIES = [
   {
     key: "lao_pattana",
-    name: "หวยลาวพัฒนา",
+    name: "หวยลาว", // ปรับชื่อ output เป็น "หวยลาว"
     source_url: "https://www.sanook.com/news/laolotto/",
     parser: "sanook_lao",
     drawCount: 3,
@@ -192,9 +192,16 @@ function parseSanookLao(text) {
       full_number: fullMatch ? fullMatch[1] : "xxxx",
       top3: top3Match ? top3Match[1] : "xxx",
       top2: top2Match ? top2Match[1] : "xx",
-      bottom2: top2Match ? top2Match[1] : "xx",
+      // เปลี่ยน bottom2 เป็น 2 ตัวแรกของ full_number
+      bottom2: fullMatch ? fullMatch[1].slice(0, 2) : "xx",
       pattana_numbers: pattanaMatch
-        ? [pattanaMatch[1], pattanaMatch[2], pattanaMatch[3], pattanaMatch[4], pattanaMatch[5]]
+        ? [
+            pattanaMatch[1],
+            pattanaMatch[2],
+            pattanaMatch[3],
+            pattanaMatch[4],
+            pattanaMatch[5],
+          ]
         : ["xx", "xx", "xx", "xx", "xx"],
     });
 
@@ -218,7 +225,8 @@ function parseSanookLao(text) {
       full_number: match[4],
       top3: match[5],
       top2: match[6],
-      bottom2: match[6],
+      // เปลี่ยน bottom2 เป็น 2 ตัวแรกของ full_number
+      bottom2: match[4].slice(0, 2),
       pattana_numbers: [match[7], match[8], match[9], match[10], match[11]],
     });
   }
@@ -227,7 +235,6 @@ function parseSanookLao(text) {
 }
 
 // ===== RAAKAADEE PARSER =====
-// FIX: ใช้ [|\s]* แทน \s* เพื่อรองรับ | (pipe) ที่เว็บเปลี่ยนมาใช้
 function parseRaakaadee(text) {
   const draws = [];
 
@@ -288,7 +295,6 @@ function parseRaakaadeeHanoi(text) {
   // Format เก่า (มีข้อมูลครบ): หวยออก|00949| 3 ตัวบน|949| 2 ตัวบน|49| 2 ตัวล่าง|57|
   // Format ใหม่ (ข้อมูลไม่ครบ): หวยออก|3 ตัวบน|2 ตัวบน|2 ตัวล่าง|09|
 
-  // ลองดึงแบบ full format ก่อน
   const fullDrawRegex =
     /(?:[ก-ฮ]+\.?\s*)?(\d{1,2})\s*(ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)\s*(\d{2,4})[\s\S]*?หวยออก[|\s]*(\d{5})[\s\S]*?3\s*ตัวบน[|\s]*(\d{3})[\s\S]*?2\s*ตัวบน[|\s]*(\d{2})[\s\S]*?2\s*ตัวล่าง[|\s]*(\d{2})/g;
 
@@ -312,7 +318,6 @@ function parseRaakaadeeHanoi(text) {
     });
   }
 
-  // ถ้าไม่ได้ครบ 3 งวด ลองดึงแบบ short format (มีแค่ 2 ตัวล่าง)
   if (draws.length < 3) {
     const shortDrawRegex =
       /(?:[ก-ฮ]+\.?\s*)?(\d{1,2})\s*(ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)\s*(\d{2,4})[\s\S]*?หวยออก[|\s]*(?:3\s*ตัวบน)[|\s]*(?:2\s*ตัวบน)[|\s]*(?:2\s*ตัวล่าง)[|\s]*(\d{2})/g;
@@ -327,7 +332,6 @@ function parseRaakaadeeHanoi(text) {
       const year = buddhistYearToGregorian(parseInt(yearStr, 10));
       const drawDate = `${year}-${month}-${day}`;
 
-      // ข้ามถ้ามีวันนี้อยู่แล้ว (จาก full format)
       if (draws.some((d) => d.draw_date === drawDate)) continue;
 
       draws.push({
@@ -339,7 +343,6 @@ function parseRaakaadeeHanoi(text) {
       });
     }
 
-    // เรียงตามวันที่ล่าสุดก่อน
     draws.sort((a, b) => b.draw_date.localeCompare(a.draw_date));
   }
 
