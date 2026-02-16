@@ -3,8 +3,10 @@ name: Update Lao Santipap Latest 3
 on:
   schedule:
     - cron: "0 1 * * *"    # 08:00 TH
+    - cron: "0 5 * * *"   # 12:00 TH
     - cron: "0 9 * * *"    # 16:00 TH
     - cron: "30 9 * * *"   # 16:30 TH
+    - cron: "0 11 * * *"   # 18:00 TH
     - cron: "35 13 * * *"  # 20:35 TH
     - cron: "0 14 * * *"   # 21:00 TH
   workflow_dispatch: {}
