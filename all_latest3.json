@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-03-04T11:55:35.119+00:00",
+  "updated_at": "2026-03-04T12:41:21.309+00:00",
   "items": [
     {
       "key": "lao_pattana",
       "name": "หวยลาว",
       "source_url": "https://www.sanook.com/news/laolotto/",
-      "fetched_at": "2026-03-04T11:55:01.548+00:00",
+      "fetched_at": "2026-03-04T12:40:51.071+00:00",
       "draws": [
         {
           "draw_date": "2026-03-04",
@@ -55,7 +55,7 @@
       "key": "lao_samakkee",
       "name": "ลาวสามัคคี",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสามัคคี/",
-      "fetched_at": "2026-03-04T11:55:09.155+00:00",
+      "fetched_at": "2026-03-04T12:40:56.831+00:00",
       "draws": [
         {
           "draw_date": "2026-03-03",
@@ -84,7 +84,7 @@
       "key": "lao_vip",
       "name": "ลาว VIP",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาว-VIP/",
-      "fetched_at": "2026-03-04T11:55:14.663+00:00",
+      "fetched_at": "2026-03-04T12:41:02.417+00:00",
       "draws": [
         {
           "draw_date": "2026-03-03",
@@ -113,7 +113,7 @@
       "key": "lao_star",
       "name": "ลาวสตาร์",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสตาร์/",
-      "fetched_at": "2026-03-04T11:55:22.151+00:00",
+      "fetched_at": "2026-03-04T12:41:10.075+00:00",
       "draws": [
         {
           "draw_date": "2026-03-04",
@@ -142,7 +142,7 @@
       "key": "lao_extra",
       "name": "ลาว Extra",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาว-Extra/",
-      "fetched_at": "2026-03-04T11:55:27.650+00:00",
+      "fetched_at": "2026-03-04T12:41:15.762+00:00",
       "draws": [
         {
           "draw_date": "4 มี.ค. 69",
@@ -171,7 +171,7 @@
       "key": "hanoi",
       "name": "ฮานอย",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยฮานอยปกติ/",
-      "fetched_at": "2026-03-04T11:55:35.119+00:00",
+      "fetched_at": "2026-03-04T12:41:21.309+00:00",
       "draws": [
         {
           "draw_date": "2026-03-04",
