@@ -48,6 +48,22 @@ const LOTTERIES = [
     parser: "raakaadee_hanoi",
     drawCount: 3,
   },
+  {
+    key: "hanoi_special",
+    name: "ฮานอยพิเศษ",
+    source_url:
+      "https://www.raakaadee.com/%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AB%E0%B8%A7%E0%B8%A2-%E0%B8%AB%E0%B8%B8%E0%B9%89%E0%B8%99/%E0%B8%AB%E0%B8%A7%E0%B8%A2%E0%B8%AE%E0%B8%B2%E0%B8%99%E0%B8%AD%E0%B8%A2%E0%B8%9E%E0%B8%B4%E0%B9%80%E0%B8%A8%E0%B8%A9/",
+    parser: "raakaadee_hanoi",
+    drawCount: 3,
+  },
+  {
+    key: "hanoi_vip",
+    name: "ฮานอย VIP",
+    source_url:
+      "https://www.raakaadee.com/%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AB%E0%B8%A7%E0%B8%A2-%E0%B8%AB%E0%B8%B8%E0%B9%89%E0%B8%99/%E0%B8%AB%E0%B8%A7%E0%B8%A2%E0%B8%AE%E0%B8%B2%E0%B8%99%E0%B8%AD%E0%B8%A2-VIP/",
+    parser: "raakaadee_hanoi",
+    drawCount: 3,
+  },
 ];
 
 // ===== THAI MONTH MAPPING =====
