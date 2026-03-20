@@ -1,14 +1,13 @@
 import fs from "node:fs/promises";
 import puppeteer from "puppeteer";
 
-// ===== PAGE CACHE =====
 const pageCache = new Map();
 
 // ===== LOTTERIES CONFIGURATION =====
 const LOTTERIES = [
   {
     key: "lao_pattana",
-    name: "หวยลาว", // ปรับชื่อ output เป็น "หวยลาว"
+    name: "หวยลาว",
     source_url: "https://www.sanook.com/news/laolotto/",
     parser: "sanook_lao",
     drawCount: 3,
@@ -104,7 +103,34 @@ function buddhistYearToGregorian(buddhistYear) {
   return buddhistYear - 543;
 }
 
-// ===== FETCH PAGE WITH PUPPETEER (with cache) =====
+// ===== SHARED BROWSER (reuse across pages to keep cookies from bot challenges) =====
+let sharedBrowser = null;
+
+async function getSharedBrowser() {
+  if (sharedBrowser) return sharedBrowser;
+  sharedBrowser = await puppeteer.launch({
+    headless: true,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-accelerated-2d-canvas",
+      "--no-first-run",
+      "--no-zygote",
+      "--disable-gpu",
+    ],
+  });
+  return sharedBrowser;
+}
+
+async function closeSharedBrowser() {
+  if (sharedBrowser) {
+    await sharedBrowser.close();
+    sharedBrowser = null;
+  }
+}
+
+// ===== FETCH PAGE WITH PUPPETEER (shared browser + bot challenge handling) =====
 async function fetchPageContent(url, retries = 3) {
   if (pageCache.has(url)) {
     console.log(`  📦 Using cached content for ${url}`);
@@ -112,29 +138,56 @@ async function fetchPageContent(url, retries = 3) {
   }
 
   for (let attempt = 1; attempt <= retries; attempt++) {
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-accelerated-2d-canvas",
-        "--no-first-run",
-        "--no-zygote",
-        "--disable-gpu",
-      ],
-    });
-
     try {
+      const browser = await getSharedBrowser();
       const page = await browser.newPage();
 
       await page.setUserAgent(
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
       );
 
-      await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
+      await page.setExtraHTTPHeaders({
+        "Accept-Language": "th-TH,th;q=0.9,en;q=0.8",
+      });
 
-      await new Promise((r) => setTimeout(r, 5000));
+      await page.goto(url, { waitUntil: "domcontentloaded", timeout: 90000 });
+
+      // ตรวจสอบ bot challenge แล้วรอให้ผ่าน
+      const maxWait = 60000;
+      const checkInterval = 3000;
+      let elapsed = 0;
+
+      while (elapsed < maxWait) {
+        await new Promise((r) => setTimeout(r, checkInterval));
+        elapsed += checkInterval;
+
+        let pageInfo;
+        try {
+          pageInfo = await page.evaluate(() => ({
+            title: document.title,
+            preview: document.body.innerText.substring(0, 300),
+          }));
+        } catch {
+          // execution context ถูก destroy จาก navigation — รอต่อ
+          console.log(`  ⏳ Page navigating... ${elapsed}ms`);
+          continue;
+        }
+
+        const isChallenging =
+          pageInfo.title.includes("Checking your browser") ||
+          pageInfo.preview.includes("Checking your browser") ||
+          pageInfo.preview.includes("Just a moment");
+
+        if (!isChallenging) {
+          console.log(`  ✅ Bot challenge passed after ${elapsed}ms`);
+          break;
+        }
+
+        console.log(`  ⏳ Waiting for bot challenge... ${elapsed}ms`);
+      }
+
+      // รอเพิ่มให้ content render ครบ
+      await new Promise((r) => setTimeout(r, 3000));
 
       let content = "";
       for (let evalAttempt = 1; evalAttempt <= 3; evalAttempt++) {
@@ -147,9 +200,8 @@ async function fetchPageContent(url, retries = 3) {
         }
       }
 
-      await browser.close();
+      await page.close();
 
-      // DEBUG: log first 500 chars to see actual format
       console.log(`  📝 Raw text preview (${url}):`);
       console.log(content.substring(0, 500));
       console.log("  ---");
@@ -157,7 +209,6 @@ async function fetchPageContent(url, retries = 3) {
       pageCache.set(url, content);
       return content;
     } catch (error) {
-      await browser.close();
       console.warn(`  Attempt ${attempt}/${retries} failed: ${error.message}`);
       if (attempt === retries) throw error;
       await new Promise((r) => setTimeout(r, 3000));
@@ -208,7 +259,6 @@ function parseSanookLao(text) {
       full_number: fullMatch ? fullMatch[1] : "xxxx",
       top3: top3Match ? top3Match[1] : "xxx",
       top2: top2Match ? top2Match[1] : "xx",
-      // เปลี่ยน bottom2 เป็น 2 ตัวแรกของ full_number
       bottom2: fullMatch ? fullMatch[1].slice(0, 2) : "xx",
       pattana_numbers: pattanaMatch
         ? [
@@ -241,7 +291,6 @@ function parseSanookLao(text) {
       full_number: match[4],
       top3: match[5],
       top2: match[6],
-      // เปลี่ยน bottom2 เป็น 2 ตัวแรกของ full_number
       bottom2: match[4].slice(0, 2),
       pattana_numbers: [match[7], match[8], match[9], match[10], match[11]],
     });
@@ -306,10 +355,6 @@ function parseRaakaadeeNoDateConvert(text) {
 // ===== RAAKAADEE HANOI PARSER =====
 function parseRaakaadeeHanoi(text) {
   const draws = [];
-
-  // ฮานอยมี 2 format:
-  // Format เก่า (มีข้อมูลครบ): หวยออก|00949| 3 ตัวบน|949| 2 ตัวบน|49| 2 ตัวล่าง|57|
-  // Format ใหม่ (ข้อมูลไม่ครบ): หวยออก|3 ตัวบน|2 ตัวบน|2 ตัวล่าง|09|
 
   const fullDrawRegex =
     /(?:[ก-ฮ]+\.?\s*)?(\d{1,2})\s*(ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)\s*(\d{2,4})[\s\S]*?หวยออก[|\s]*(\d{5})[\s\S]*?3\s*ตัวบน[|\s]*(\d{3})[\s\S]*?2\s*ตัวบน[|\s]*(\d{2})[\s\S]*?2\s*ตัวล่าง[|\s]*(\d{2})/g;
@@ -417,10 +462,14 @@ async function main() {
 
   const items = [];
 
-  for (const lottery of LOTTERIES) {
-    const result = await processLottery(lottery);
-    items.push(result);
-    console.log(`  ✓ ${lottery.name}: ${result.draws.length} draws\n`);
+  try {
+    for (const lottery of LOTTERIES) {
+      const result = await processLottery(lottery);
+      items.push(result);
+      console.log(`  ✓ ${lottery.name}: ${result.draws.length} draws\n`);
+    }
+  } finally {
+    await closeSharedBrowser();
   }
 
   const output = {
@@ -435,7 +484,8 @@ async function main() {
   console.log(JSON.stringify(output, null, 2));
 }
 
-main().catch((err) => {
+main().catch(async (err) => {
   console.error("Fatal error:", err);
+  await closeSharedBrowser();
   process.exit(1);
 });
