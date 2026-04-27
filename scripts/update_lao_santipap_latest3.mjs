@@ -158,7 +158,7 @@ function normalizeText(text) {
 }
 
 // ===== FETCH PAGE WITH PUPPETEER (shared browser + stealth + content validation + reload retry) =====
-async function fetchPageContent(url, retries = 3) {
+async function fetchPageContent(url, retries = 4) {
   if (pageCache.has(url)) {
     console.log(`  📦 Using cached content for ${url}`);
     return pageCache.get(url);
@@ -560,8 +560,10 @@ async function main() {
       console.log(`  ✓ ${lottery.name}: ${result.draws.length} draws\n`);
 
       // เว้นช่วงระหว่าง URL กัน rate limit (raakaadee.com ตอบ 429 ถ้ายิงเร็วเกิน)
+      // 6s ไม่พอ — เคยทำให้ฮานอย/ฮานอยพิเศษ accumulate rate limit แล้วพัง
+      // 15s + jitter ลด pattern detection
       if (i < LOTTERIES.length - 1) {
-        const delayMs = 6000;
+        const delayMs = 15000 + Math.floor(Math.random() * 5000);
         console.log(`  ⏸  waiting ${delayMs}ms before next lottery...`);
         await new Promise((r) => setTimeout(r, delayMs));
       }
