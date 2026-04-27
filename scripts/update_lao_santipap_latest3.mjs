@@ -133,19 +133,28 @@ async function closeSharedBrowser() {
   }
 }
 
-// ===== HELPERS: ตรวจสอบ content =====
+// ===== HELPERS: ตรวจสอบ / normalize content =====
 function isChallengeContent(text) {
   return (
     text.includes("Checking your browser") ||
     text.includes("Just a moment") ||
     text.includes("cf-browser-verification") ||
-    text.includes("__cf_chl_")
+    text.includes("__cf_chl_") ||
+    text.includes("HTTP ERROR 429") ||
+    text.includes("This page isn’t working") ||
+    text.includes("This page isn't working")
   );
 }
 
 function hasExpectedKeyword(text) {
   // raakaadee.com ใช้ "หวยออก", sanook.com ใช้ "เลขท้าย"
   return text.includes("หวยออก") || text.includes("เลขท้าย");
+}
+
+// ลบ zero-width characters (ZWSP, ZWNJ, ZWJ, WJ, BOM) ที่บางเว็บแอบใส่กัน scrape
+// เช่น Sanook ใส่ \u200b ระหว่างชื่อหัวข้อ ทำให้ /ตรวจหวยลาว\s*\d/ ไม่ match
+function normalizeText(text) {
+  return text.replace(/[\u200b\u200c\u200d\u2060\ufeff]/g, "");
 }
 
 // ===== FETCH PAGE WITH PUPPETEER (shared browser + stealth + content validation + reload retry) =====
@@ -171,7 +180,28 @@ async function fetchPageContent(url, retries = 3) {
 
       await page.setViewport({ width: 1366, height: 768 });
 
-      await page.goto(url, { waitUntil: "domcontentloaded", timeout: 90000 });
+      const response = await page.goto(url, {
+        waitUntil: "domcontentloaded",
+        timeout: 90000,
+      });
+
+      // ตรวจ HTTP status ก่อน — ถ้า 429 ให้ backoff นาน ๆ แล้วเปิดหน้าใหม่
+      const status = response ? response.status() : null;
+      if (status === 429 || (status && status >= 500)) {
+        const backoffMs = 30000 * attempt; // 30s, 60s, 90s
+        console.warn(
+          `  ⛔ HTTP ${status} on ${url} — backing off ${backoffMs}ms (attempt ${attempt}/${retries})`
+        );
+        try {
+          await page.close();
+        } catch {}
+        page = null;
+        if (attempt === retries) {
+          throw new Error(`HTTP ${status} after ${retries} attempts`);
+        }
+        await new Promise((r) => setTimeout(r, backoffMs));
+        continue;
+      }
 
       // ตรวจสอบ bot challenge แล้วรอให้ผ่าน
       const maxWait = 60000;
@@ -245,10 +275,16 @@ async function fetchPageContent(url, retries = 3) {
       // ถ้า content ยังไม่ valid ให้ retry attempt ใหม่ (page ใหม่)
       if (isChallengeContent(content) || !hasExpectedKeyword(content)) {
         if (attempt < retries) {
+          // กรณีเจอ 429 page ใน text → backoff นานขึ้น
+          const looks429 =
+            content.includes("HTTP ERROR 429") ||
+            content.includes("This page isn’t working") ||
+            content.includes("This page isn't working");
+          const waitMs = looks429 ? 30000 * attempt : 5000;
           console.warn(
-            `  ⚠️ Attempt ${attempt}/${retries} got challenge/empty content, retrying with fresh page...`
+            `  ⚠️ Attempt ${attempt}/${retries} got challenge/empty content (429=${looks429}), retrying in ${waitMs}ms...`
           );
-          await new Promise((r) => setTimeout(r, 5000));
+          await new Promise((r) => setTimeout(r, waitMs));
           continue;
         }
         console.warn(
@@ -468,7 +504,8 @@ async function processLottery(lottery) {
   console.log(`Fetching ${lottery.name} from ${lottery.source_url}...`);
 
   try {
-    const text = await fetchPageContent(lottery.source_url);
+    const rawText = await fetchPageContent(lottery.source_url);
+    const text = normalizeText(rawText);
 
     let draws = [];
     switch (lottery.parser) {
@@ -516,10 +553,18 @@ async function main() {
   const items = [];
 
   try {
-    for (const lottery of LOTTERIES) {
+    for (let i = 0; i < LOTTERIES.length; i++) {
+      const lottery = LOTTERIES[i];
       const result = await processLottery(lottery);
       items.push(result);
       console.log(`  ✓ ${lottery.name}: ${result.draws.length} draws\n`);
+
+      // เว้นช่วงระหว่าง URL กัน rate limit (raakaadee.com ตอบ 429 ถ้ายิงเร็วเกิน)
+      if (i < LOTTERIES.length - 1) {
+        const delayMs = 6000;
+        console.log(`  ⏸  waiting ${delayMs}ms before next lottery...`);
+        await new Promise((r) => setTimeout(r, delayMs));
+      }
     }
   } finally {
     await closeSharedBrowser();
