@@ -1,5 +1,8 @@
 import fs from "node:fs/promises";
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-extra";
+import StealthPlugin from "puppeteer-extra-plugin-stealth";
+
+puppeteer.use(StealthPlugin());
 
 const pageCache = new Map();
 
@@ -130,7 +133,22 @@ async function closeSharedBrowser() {
   }
 }
 
-// ===== FETCH PAGE WITH PUPPETEER (shared browser + bot challenge handling) =====
+// ===== HELPERS: ตรวจสอบ content =====
+function isChallengeContent(text) {
+  return (
+    text.includes("Checking your browser") ||
+    text.includes("Just a moment") ||
+    text.includes("cf-browser-verification") ||
+    text.includes("__cf_chl_")
+  );
+}
+
+function hasExpectedKeyword(text) {
+  // raakaadee.com ใช้ "หวยออก", sanook.com ใช้ "เลขท้าย"
+  return text.includes("หวยออก") || text.includes("เลขท้าย");
+}
+
+// ===== FETCH PAGE WITH PUPPETEER (shared browser + stealth + content validation + reload retry) =====
 async function fetchPageContent(url, retries = 3) {
   if (pageCache.has(url)) {
     console.log(`  📦 Using cached content for ${url}`);
@@ -138,9 +156,10 @@ async function fetchPageContent(url, retries = 3) {
   }
 
   for (let attempt = 1; attempt <= retries; attempt++) {
+    let page;
     try {
       const browser = await getSharedBrowser();
-      const page = await browser.newPage();
+      page = await browser.newPage();
 
       await page.setUserAgent(
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -149,6 +168,8 @@ async function fetchPageContent(url, retries = 3) {
       await page.setExtraHTTPHeaders({
         "Accept-Language": "th-TH,th;q=0.9,en;q=0.8",
       });
+
+      await page.setViewport({ width: 1366, height: 768 });
 
       await page.goto(url, { waitUntil: "domcontentloaded", timeout: 90000 });
 
@@ -168,7 +189,6 @@ async function fetchPageContent(url, retries = 3) {
             preview: document.body.innerText.substring(0, 300),
           }));
         } catch {
-          // execution context ถูก destroy จาก navigation — รอต่อ
           console.log(`  ⏳ Page navigating... ${elapsed}ms`);
           continue;
         }
@@ -200,15 +220,48 @@ async function fetchPageContent(url, retries = 3) {
         }
       }
 
+      // ถ้า content ยังเป็นหน้า challenge หรือไม่มี keyword ที่คาดหวัง
+      // → reload (ใช้ cookie cf_clearance ที่ได้จาก challenge แรก) ก่อนยอมแพ้
+      if (isChallengeContent(content) || !hasExpectedKeyword(content)) {
+        console.log(
+          `  🔄 Content incomplete (challenge=${isChallengeContent(content)}, keyword=${hasExpectedKeyword(content)}), reloading...`
+        );
+        try {
+          await page.reload({ waitUntil: "networkidle2", timeout: 60000 });
+          await new Promise((r) => setTimeout(r, 5000));
+          content = await page.evaluate(() => document.body.innerText);
+        } catch (reloadErr) {
+          console.warn(`  reload failed: ${reloadErr.message}`);
+        }
+      }
+
       await page.close();
+      page = null;
 
       console.log(`  📝 Raw text preview (${url}):`);
       console.log(content.substring(0, 500));
       console.log("  ---");
 
+      // ถ้า content ยังไม่ valid ให้ retry attempt ใหม่ (page ใหม่)
+      if (isChallengeContent(content) || !hasExpectedKeyword(content)) {
+        if (attempt < retries) {
+          console.warn(
+            `  ⚠️ Attempt ${attempt}/${retries} got challenge/empty content, retrying with fresh page...`
+          );
+          await new Promise((r) => setTimeout(r, 5000));
+          continue;
+        }
+        console.warn(
+          `  ⚠️ Attempt ${attempt}/${retries} still bad — returning anyway`
+        );
+      }
+
       pageCache.set(url, content);
       return content;
     } catch (error) {
+      try {
+        if (page) await page.close();
+      } catch {}
       console.warn(`  Attempt ${attempt}/${retries} failed: ${error.message}`);
       if (attempt === retries) throw error;
       await new Promise((r) => setTimeout(r, 3000));
