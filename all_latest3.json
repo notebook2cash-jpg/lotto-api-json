@@ -1,12 +1,26 @@
 {
-  "updated_at": "2026-09-14T18:53:34.485+00:00",
+  "updated_at": "2026-09-15T15:42:20.173+00:00",
   "items": [
     {
       "key": "lao_pattana",
       "name": "หวยลาว",
       "source_url": "https://www.sanook.com/news/laolotto/",
-      "fetched_at": "2026-09-14T18:50:33.472+00:00",
+      "fetched_at": "2026-09-15T15:39:31.802+00:00",
       "draws": [
+        {
+          "draw_date": "2026-09-15",
+          "full_number": "xxxx",
+          "top3": "xxx",
+          "top2": "xx",
+          "bottom2": "xx",
+          "pattana_numbers": [
+            "xx",
+            "xx",
+            "xx",
+            "xx",
+            "xx"
+          ]
+        },
         {
           "draw_date": "2026-09-14",
           "full_number": "3344",
@@ -34,20 +48,6 @@
             "04",
             "31"
           ]
-        },
-        {
-          "draw_date": "2026-09-10",
-          "full_number": "7128",
-          "top3": "128",
-          "top2": "28",
-          "bottom2": "71",
-          "pattana_numbers": [
-            "42",
-            "28",
-            "09",
-            "03",
-            "36"
-          ]
         }
       ]
     },
@@ -55,8 +55,15 @@
       "key": "lao_samakkee",
       "name": "ลาวสามัคคี",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสามัคคี/",
-      "fetched_at": "2026-09-14T18:51:01.911+00:00",
+      "fetched_at": "2026-09-15T15:39:56.122+00:00",
       "draws": [
+        {
+          "draw_date": "2026-09-15",
+          "full_number": "02763",
+          "top3": "763",
+          "top2": "63",
+          "bottom2": "27"
+        },
         {
           "draw_date": "2026-09-14",
           "full_number": "35259",
@@ -70,13 +77,6 @@
           "top3": "472",
           "top2": "72",
           "bottom2": "14"
-        },
-        {
-          "draw_date": "2026-09-12",
-          "full_number": "56048",
-          "top3": "048",
-          "top2": "48",
-          "bottom2": "60"
         }
       ]
     },
@@ -84,8 +84,15 @@
       "key": "lao_vip",
       "name": "ลาว VIP",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาว-VIP/",
-      "fetched_at": "2026-09-14T18:51:24.734+00:00",
+      "fetched_at": "2026-09-15T15:40:19.865+00:00",
       "draws": [
+        {
+          "draw_date": "2026-09-14",
+          "full_number": "57264",
+          "top3": "264",
+          "top2": "64",
+          "bottom2": "72"
+        },
         {
           "draw_date": "2026-09-13",
           "full_number": "87845",
@@ -99,13 +106,6 @@
           "top3": "382",
           "top2": "82",
           "bottom2": "43"
-        },
-        {
-          "draw_date": "2026-09-11",
-          "full_number": "97062",
-          "top3": "062",
-          "top2": "62",
-          "bottom2": "70"
         }
       ]
     },
@@ -113,8 +113,15 @@
       "key": "lao_star",
       "name": "ลาวสตาร์",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาวสตาร์/",
-      "fetched_at": "2026-09-14T18:51:51.530+00:00",
+      "fetched_at": "2026-09-15T15:40:42.957+00:00",
       "draws": [
+        {
+          "draw_date": "2026-09-15",
+          "full_number": "00339",
+          "top3": "339",
+          "top2": "39",
+          "bottom2": "00"
+        },
         {
           "draw_date": "2026-09-14",
           "full_number": "86272",
@@ -128,13 +135,6 @@
           "top3": "188",
           "top2": "88",
           "bottom2": "13"
-        },
-        {
-          "draw_date": "2026-09-12",
-          "full_number": "77330",
-          "top3": "330",
-          "top2": "30",
-          "bottom2": "77"
         }
       ]
     },
@@ -142,8 +142,15 @@
       "key": "lao_extra",
       "name": "ลาว Extra",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยลาว-Extra/",
-      "fetched_at": "2026-09-14T18:52:14.614+00:00",
+      "fetched_at": "2026-09-15T15:41:08.257+00:00",
       "draws": [
+        {
+          "draw_date": "15 ก.ย. 69",
+          "full_number": "26429",
+          "top3": "429",
+          "top2": "29",
+          "bottom2": "26"
+        },
         {
           "draw_date": "14 ก.ย. 69",
           "full_number": "51377",
@@ -157,13 +164,6 @@
           "top3": "629",
           "top2": "29",
           "bottom2": "00"
-        },
-        {
-          "draw_date": "12 ก.ย. 69",
-          "full_number": "30454",
-          "top3": "454",
-          "top2": "54",
-          "bottom2": "30"
         }
       ]
     },
@@ -171,8 +171,15 @@
       "key": "hanoi",
       "name": "ฮานอย",
       "source_url": "https://www.raakaadee.com/ตรวจหวย-หุ้น/หวยฮานอยปกติ/",
-      "fetched_at": "2026-09-14T18:52:42.271+00:00",
+      "fetched_at": "2026-09-15T15:41:33.580+00:00",
       "draws": [
+        {
+          "draw_date": "2026-09-15",
+          "full_number": "31429",
+          "top3": "429",
+          "top2": "29",
+          "bottom2": "41"
+        },
         {
           "draw_date": "2026-09-14",
           "full_number": "74522",
@@ -186,13 +193,6 @@
           "top3": "799",
           "top2": "99",
           "bottom2": "29"
-        },
-        {
-          "draw_date": "2026-09-12",
-          "full_number": "58851",
-          "top3": "851",
-          "top2": "51",
-          "bottom2": "35"
         }
       ]
     },
@@ -200,8 +200,15 @@
       "key": "hanoi_special",
       "name": "ฮานอยพิเศษ",
       "source_url": "https://www.raakaadee.com/%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AB%E0%B8%A7%E0%B8%A2-%E0%B8%AB%E0%B8%B8%E0%B9%89%E0%B8%99/%E0%B8%AB%E0%B8%A7%E0%B8%A2%E0%B8%AE%E0%B8%B2%E0%B8%99%E0%B8%AD%E0%B8%A2%E0%B8%9E%E0%B8%B4%E0%B9%80%E0%B8%A8%E0%B8%A9/",
-      "fetched_at": "2026-09-14T18:53:08.960+00:00",
+      "fetched_at": "2026-09-15T15:41:56.714+00:00",
       "draws": [
+        {
+          "draw_date": "2026-09-15",
+          "full_number": "38996",
+          "top3": "996",
+          "top2": "96",
+          "bottom2": "17"
+        },
         {
           "draw_date": "2026-09-14",
           "full_number": "46581",
@@ -215,13 +222,6 @@
           "top3": "505",
           "top2": "05",
           "bottom2": "96"
-        },
-        {
-          "draw_date": "2026-09-12",
-          "full_number": "70963",
-          "top3": "963",
-          "top2": "63",
-          "bottom2": "98"
         }
       ]
     },
@@ -229,8 +229,15 @@
       "key": "hanoi_vip",
       "name": "ฮานอย VIP",
       "source_url": "https://www.raakaadee.com/%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B8%AB%E0%B8%A7%E0%B8%A2-%E0%B8%AB%E0%B8%B8%E0%B9%89%E0%B8%99/%E0%B8%AB%E0%B8%A7%E0%B8%A2%E0%B8%AE%E0%B8%B2%E0%B8%99%E0%B8%AD%E0%B8%A2-VIP/",
-      "fetched_at": "2026-09-14T18:53:34.363+00:00",
+      "fetched_at": "2026-09-15T15:42:20.055+00:00",
       "draws": [
+        {
+          "draw_date": "2026-09-15",
+          "full_number": "98272",
+          "top3": "272",
+          "top2": "72",
+          "bottom2": "33"
+        },
         {
           "draw_date": "2026-09-14",
           "full_number": "34439",
@@ -244,13 +251,6 @@
           "top3": "455",
           "top2": "55",
           "bottom2": "20"
-        },
-        {
-          "draw_date": "2026-09-12",
-          "full_number": "43930",
-          "top3": "930",
-          "top2": "30",
-          "bottom2": "39"
         }
       ]
     }
